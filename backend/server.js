@@ -73,6 +73,6 @@ io.on("connection", (socket) => {
   socket.on("end-call", (receiverId) => socket.to(receiverId).emit("call-ended"));
   socket.on("reject-call", (receiverId) => socket.to(receiverId).emit("call-rejected"));
 });
-server.listen(3000, "0.0.0.0", () => {
+server.listen(3000, () => {
   console.log("app is runnning on this port :", 3000);
 });
