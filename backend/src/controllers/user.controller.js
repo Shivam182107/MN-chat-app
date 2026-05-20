@@ -11,11 +11,11 @@ async function loginUser(res, User) {
     await tokenDoc.save();
 
     res.cookie("refreshToken", refreshToken, {
-        httpOnly: true, sameSite: "lax", secure: false,
+        httpOnly: true, sameSite: "None", secure: true,
         maxAge: 60 * 1000 * 60 * 24 * 7,
     });
     res.cookie("accessToken", accessToken, {
-        httpOnly: true, sameSite: "lax", secure: false,
+        httpOnly: true, sameSite: "None", secure: true,
         maxAge: 60 * 1000 * 60,
     });
 
@@ -81,11 +81,11 @@ module.exports.googleAuthCallback = async (req, res) => {
         await tokenDoc.save();
 
         res.cookie("refreshToken", refreshToken, {
-            httpOnly: true, sameSite: "lax", secure: false,
+            httpOnly: true, sameSite: "None", secure: true,
             maxAge: 60 * 1000 * 60 * 24 * 7,
         });
         res.cookie("accessToken", accessToken, {
-            httpOnly: true, sameSite: "lax", secure: false,
+            httpOnly: true, sameSite: "None", secure: true,
             maxAge: 60 * 1000 * 60,
         });
 
@@ -118,7 +118,10 @@ module.exports.generateAccessToken = async (req, res) => {
         const tokenPayload = jwt.verify(refreshToken, process.env.SECRET_KEY);
         if (tokenPayload.type === "refreshToken") {
             const accessToken = jwt.sign({ _id: tokenPayload._id, type: "accessToken" }, process.env.SECRET_KEY, { expiresIn: "30m" });
-            res.cookie("accessToken", accessToken);
+            res.cookie("accessToken", accessToken,{
+            httpOnly: true, sameSite: "None", secure: true,
+            maxAge: 60 * 1000 * 60,
+        });
             return res.status(200).json({ message: "accessToken created", accessToken });
         }
         return res.status(401).json({ error: "Invalid token type" });
