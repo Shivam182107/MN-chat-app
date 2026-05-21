@@ -67,7 +67,7 @@ io.on("connection", (socket) => {
   socket.on("answer-call", (receiverId, answer) => {
     socket.to(receiverId).emit("call-answered", { answer });
   });
-  socket.on("ice-candiadte", (receiverId, candidate) => {
+  socket.on("ice-candidate", (receiverId, candidate) => {
     socket.to(receiverId).emit("ice-candidate", candidate);
   });
   socket.on("end-call", (receiverId) => socket.to(receiverId).emit("call-ended"));
