@@ -140,27 +140,33 @@ const { selectedChat, callState, setCallState, incomingCall, setIncomingCall, ca
   }, [isScoketConnected]);
 
   // ── Get local stream ─────────────────────────────────────────────────────
-  async function getLocalStream(withVideo) {
-    try {
-      const stream = await navigator.mediaDevices.getUserMedia({ video: withVideo, audio: true });
-      localStreamRef.current = stream;
-      setTimeout(() => {
-        if (localVideoRef.current) localVideoRef.current.srcObject = stream;
-      }, 0);
-      if (!withVideo) startSpeakingDetection(stream);
-      return stream;
-    } catch (e) {
-      console.error("Media error:", e);
-      alert("Media error: " + e.message);
-      return null;
-    }
+ // Replace getLocalStream's setTimeout with a useEffect
+async function getLocalStream(withVideo) {
+  try {
+    const stream = await navigator.mediaDevices.getUserMedia({ video: withVideo, audio: true });
+    localStreamRef.current = stream;
+    // Remove the setTimeout — handle in useEffect below
+    if (!withVideo) startSpeakingDetection(stream);
+    return stream;
+  } catch (e) {
+    console.error("Media error:", e);
+    alert("Media error: " + e.message);
+    return null;
   }
+}
+
+// Add this useEffect to assign local video when the element is ready:
+useEffect(() => {
+  if (localVideoRef.current && localStreamRef.current) {
+    localVideoRef.current.srcObject = localStreamRef.current;
+  }
+}, [callState]); // re-runs when callState changes to "in-call" and video element renders
 
   // ── Create peer connection ────────────────────────────────────────────────
   function createPeerConnection(remoteId) {
     const peer = new RTCPeerConnection(ICE_SERVERS);
     peer.onicecandidate = (e) => {
-      if (e.candidate) socketRef.current.emit("ice-candiadte", remoteId, e.candidate);
+      if (e.candidate) socketRef.current.emit("ice-candidate", remoteId, e.candidate);
     };
     peer.ontrack = (e) => {
       if (remoteVideoRef.current) remoteVideoRef.current.srcObject = e.streams[0];
