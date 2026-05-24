@@ -56,8 +56,8 @@ io.on("connection", (socket) => {
       socket.in(val._id).emit("message recieved", message);
     });
   });
-  socket.on("call-user", (receiverId, callerId, offer) => {
-    socket.to(receiverId).emit("incomming-call", { offer, callerId });
+  socket.on("call-user", (receiverId, callerId, offer,withVideo,callerData) => {
+    socket.to(receiverId).emit("incomming-call", { offer, callerId,withVideo,callerData });
   });
   socket.on("call-cancelled", (receiverId, callerId) => {
     socket.to(receiverId).emit("call-cancelled");
