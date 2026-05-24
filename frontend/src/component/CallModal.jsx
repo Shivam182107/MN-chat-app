@@ -66,6 +66,7 @@ const CallModal = () => {
   const [isAudioOnly, setIsAudioOnly] = useState(false);
   const [isSpeaking, setIsSpeaking] = useState(false);
   const [timeoutCountdown, setTimeoutCountdown] = useState(0);
+  const remoteAudioRef=useRef();
 
   // ── Refs for cleanup ─────────────────────────────────────────────────────
   const animFrameRef = useRef(null);
@@ -227,8 +228,12 @@ const CallModal = () => {
         socketRef.current.emit("ice-candidate", remoteId, e.candidate);
     };
     peer.ontrack = (e) => {
-      if (remoteVideoRef.current)
+      if (remoteVideoRef.current && !isAudioOnly){
         remoteVideoRef.current.srcObject = e.streams[0];
+      }
+      if (remoteAudioRef.current){
+        remoteAudioRef.current.srcObject = e.streams[0];
+      }
     };
     if (localStreamRef.current) {
       localStreamRef.current
@@ -351,6 +356,7 @@ const CallModal = () => {
     }
     if (localVideoRef.current) localVideoRef.current.srcObject = null;
     if (remoteVideoRef.current) remoteVideoRef.current.srcObject = null;
+    if (remoteAudioRef.current) remoteAudioRef.current.srcObject = null;
     callStartTimeRef.current = null;
     remoteIdRef.current = "";
     setCallState("idle");
@@ -456,6 +462,7 @@ const CallModal = () => {
                 toggleMute={toggleMute}
                 toggleVideo={toggleVideo}
                 endCall={endCall}
+                remoteAudioRef={remoteAudioRef}
               />
             ) : (
               /* VIDEO UI */
