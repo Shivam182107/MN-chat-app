@@ -298,7 +298,7 @@ const Home = () => {
 
   useEffect(() => {
     if (!User) return;
-    socketRef.current = io("import.meta.env.VITE_BASE_URL");//import.meta.env.VITE_BASE_URL
+    socketRef.current = io(import.meta.env.VITE_BASE_URL);//import.meta.env.VITE_BASE_URL
     socketRef.current.on("connect", () => {
       setisScoketConnected(true);
       socketRef.current.emit("setup", User);

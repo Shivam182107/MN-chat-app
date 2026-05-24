@@ -1,6 +1,6 @@
 import axios from "axios";
 const api=axios.create({
-    baseURL:"import.meta.env.VITE_BASE_URL",//"http://localhost:3000",//import.meta.env.VITE_BASE_URL
+    baseURL:import.meta.env.VITE_BASE_URL,//"http://localhost:3000",//import.meta.env.VITE_BASE_URL
     withCredentials:true
 })
 api.interceptors.response.use(
