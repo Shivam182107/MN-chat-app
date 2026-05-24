@@ -1,6 +1,6 @@
 import React from "react";
 
-const VideoOnlyCall = ({ localVideoRef, remoteVideoRef,toggleMute,toggleVideo,endCall }) => {
+const VideoOnlyCall = ({ localVideoRef, remoteVideoRef,toggleMute,toggleVideo,endCall,isMuted }) => {
   return (
     <>
       <div className="flex h-full w-full  border-2 transition-all duration-150 bg-black">
