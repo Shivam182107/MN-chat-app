@@ -469,7 +469,7 @@ const MessageContainer = () => {
                         className="flex items-center gap-3 px-3 py-2 hover:bg-[#2a2a2a] rounded-lg text-sm"
                         onClick={() => {
                           setIsCallPopupOpen(false);
-                          startCall(false, otherUser._id); // audio only
+                          startCall(false, otherUser._id,User); // audio only
                           console.log("audio call")
                         }}>
                         <MdCall size={18} />
@@ -480,7 +480,7 @@ const MessageContainer = () => {
                         className="flex items-center gap-3 px-3 py-2 hover:bg-[#2a2a2a] rounded-lg text-sm"
                         onClick={() => {
                           setIsCallPopupOpen(false);
-                          startCall(true, otherUser._id); // with video
+                          startCall(true, otherUser._id,User); // with video
                           console.log("video call")
                         }}>
                         <BsCameraVideo size={18} />

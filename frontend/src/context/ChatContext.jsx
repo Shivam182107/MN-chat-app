@@ -150,9 +150,9 @@ const ChatContext = ({ children }) => {
   const [callHistory, setCallHistory] = useState([]);
   // startCall is set by CallModal so MessageContainer can trigger a call
   const startCallRef = useRef(null);
-  function startCall(withVideo, receiverId) {
+  function startCall(withVideo, receiverId,callerData) {
   console.log("startCall called, ref=", startCallRef.current); // add this
-  if (startCallRef.current) startCallRef.current(withVideo, receiverId);
+  if (startCallRef.current) startCallRef.current(withVideo, receiverId,callerData);
 }
   // ─────────────────────────────────────────────────────────────────────────
 
@@ -202,8 +202,8 @@ const ChatContext = ({ children }) => {
   // ── incoming call listener ────────────────────────────────────────────────
   useEffect(() => {
     if (!isScoketConnected || !socketRef.current) return;
-    const handleIncomingCall = ({ offer, callerId }) => {
-      setIncomingCall({ offer, callerId });
+    const handleIncomingCall = ({ offer, callerId,withVideo,callerData}) => {
+      setIncomingCall({ offer, callerId,withVideo,callerData });
       setCallState("incoming");
     };
     // missed calls delivered on connect

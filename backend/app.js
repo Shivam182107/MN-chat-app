@@ -17,7 +17,7 @@ connectDb()
 app.use(express.urlencoded({ extended: true }));
 app.use(express.json());
 app.use(cors({
-    origin: "https://mn-chat-app.vercel.app",//"http://localhost:5173"
+     origin: process.env.FRONTEND_URL,//"https://mn-chat-app.vercel.app" 
     credentials: true,
 }));
 app.use(cookieParser());

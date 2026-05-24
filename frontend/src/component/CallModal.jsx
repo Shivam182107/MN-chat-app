@@ -2,6 +2,9 @@ import { useContext, useEffect, useRef, useState } from "react";
 import { chatContext } from "../context/ChatContext";
 import { authContext } from "../context/AuthContext";
 import { getSenderDetails } from "../config/ChatLogic";
+import IncomingCallModal from "./IncomingCallModal";
+import AudioOnlyCall from "./AudioOnlyCall";
+import VideoOnlyCall from "./VideoOnlyCall";
 
 const ICE_SERVERS = {
   iceServers: [
@@ -70,9 +73,7 @@ const CallModal = () => {
   const timeoutCancelRef = useRef(null);
 
   // get other user's info from selectedChat
-  const otherUser = selectedChat
-    ? selectedChat.users?.find((u) => u._id !== User._id)
-    : null;
+  const otherUser = selectedChat?.users?.find((u) => u._id !== User._id);
 
   // ── Speaking detection ───────────────────────────────────────────────────
   function startSpeakingDetection(stream) {
@@ -248,7 +249,7 @@ const CallModal = () => {
   // Called from MessageContainer when user clicks Voice/Video call button
   // withVideo: true = video call, false = audio only
   // receiverId: other user's MongoDB _id
-  async function initiateCall(withVideo, receiverId) {
+  async function initiateCall(withVideo, receiverId, callerData) {
     const stream = await getLocalStream(withVideo);
     if (!stream) return;
     setIsAudioOnly(!withVideo);
@@ -259,7 +260,14 @@ const CallModal = () => {
     const offer = await peer.createOffer();
     await peer.setLocalDescription(offer);
     // callerId = User._id (server will emit to this room to send answer back)
-    socketRef.current.emit("call-user", receiverId, User._id, offer);
+    socketRef.current.emit(
+      "call-user",
+      receiverId,
+      User._id,
+      offer,
+      withVideo,
+      callerData,
+    );
     startCallTimeout(receiverId);
   }
 
@@ -275,7 +283,7 @@ const CallModal = () => {
       duration: null,
     });
     cleanupCall();
-    if (timedOut) alert("No answer. Call ended automatically.");
+    // if (timedOut) alert("No answer. Call ended automatically.");
   }
 
   // ── ACCEPT CALL ───────────────────────────────────────────────────────────
@@ -379,8 +387,16 @@ const CallModal = () => {
   if (callState === "idle" && !incomingCall) return null;
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/70 backdrop-blur-sm">
-      <div className="bg-[#1a1a2e] rounded-2xl shadow-2xl p-6 w-[90vw] max-w-[700px] text-white flex flex-col gap-4">
+    <div
+      className={`fixed inset-0 z-50 flex items-center justify-center bg-black/70 backdrop-blur-sm ${callState === "in-call" && "h-screen"} `}
+    >
+      <div
+        className={
+          callState === "in-call"
+            ? "h-screen flex flex-col bg-[#F7F5F3] w-full"
+            : "bg-black rounded-2xl shadow-2xl p-6 w-[90vw] max-w-[700px] text-white flex flex-col gap-4"
+        }
+      >
         {/* ── CALLING STATE ── */}
         {callState === "calling" && (
           <div className="flex flex-col items-center gap-3">
@@ -411,125 +427,46 @@ const CallModal = () => {
             </div>
             <button
               onClick={() => cancelCall(remoteIdRef.current, false)}
-              className="mt-2 px-6 py-2 bg-red-600 rounded-full text-sm font-medium hover:bg-red-700 transition"
+              className="mt-2 w-full py-3 cursor-pointer bg-red-600 rounded-[50px] text-sm font-medium hover:bg-red-700 transition"
             >
-              ❌ Cancel
+              Decline
             </button>
           </div>
         )}
 
         {/* ── INCOMING CALL STATE ── */}
         {callState === "incoming" && incomingCall && (
-          <div className="flex flex-col items-center gap-3">
-            <div className="w-20 h-20 rounded-full bg-[#2a2a4a] flex items-center justify-center text-4xl animate-bounce">
-              📲
-            </div>
-            <p className="text-lg font-semibold">Incoming Call</p>
-            <p className="text-sm text-gray-400 break-all">
-              {incomingCall.callerId}
-            </p>
-            <div className="flex gap-3 mt-2">
-              <button
-                onClick={() => acceptCall(true)}
-                className="px-5 py-2 bg-green-600 rounded-full text-sm font-medium hover:bg-green-700 transition"
-              >
-                📹 Video
-              </button>
-              <button
-                onClick={() => acceptCall(false)}
-                className="px-5 py-2 bg-blue-600 rounded-full text-sm font-medium hover:bg-blue-700 transition"
-              >
-                🎤 Audio
-              </button>
-              <button
-                onClick={rejectCall}
-                className="px-5 py-2 bg-red-600 rounded-full text-sm font-medium hover:bg-red-700 transition"
-              >
-                ❌ Reject
-              </button>
-            </div>
-          </div>
+          <IncomingCallModal
+            acceptCall={acceptCall}
+            rejectCall={rejectCall}
+            incomingCall={incomingCall}
+          />
         )}
 
         {/* ── IN CALL STATE ── */}
         {callState === "in-call" && (
-          <div className="flex flex-col gap-4">
+          <div className="flex flex-col gap-4 h-full ">
             {isAudioOnly ? (
               /* AUDIO ONLY UI */
-              <div
-                className="flex flex-col items-center justify-center h-48 rounded-xl border-2 transition-all duration-150"
-                style={{
-                  borderColor: isSpeaking ? "#4caf50" : "#333",
-                  background: "#111827",
-                }}
-              >
-                <div
-                  className="w-20 h-20 rounded-full flex items-center justify-center text-4xl transition-all duration-150"
-                  style={{
-                    background: isSpeaking ? "#4caf50" : "#374151",
-                    boxShadow: isSpeaking
-                      ? "0 0 0 12px rgba(76,175,80,0.2)"
-                      : "none",
-                  }}
-                >
-                  🎤
-                </div>
-                <p className="text-sm mt-3 text-gray-300">
-                  {isMuted
-                    ? "🔇 Muted"
-                    : isSpeaking
-                      ? "🟢 Speaking..."
-                      : "🔵 Connected — Audio Only"}
-                </p>
-              </div>
+              <AudioOnlyCall
+                isSpeaking={isSpeaking}
+                isMuted={isMuted}
+                localUser={User}
+                remoteUser={otherUser}
+                toggleMute={toggleMute}
+                toggleVideo={toggleVideo}
+                endCall={endCall}
+              />
             ) : (
               /* VIDEO UI */
-              <div className="flex gap-3 flex-wrap">
-                <div className="flex-1 min-w-[280px]">
-                  <p className="text-xs text-gray-400 mb-1">You</p>
-                  <video
-                    ref={localVideoRef}
-                    autoPlay
-                    muted
-                    playsInline
-                    className="w-full h-48 rounded-xl object-cover bg-black"
-                  />
-                </div>
-                <div className="flex-1 min-w-[280px]">
-                  <p className="text-xs text-gray-400 mb-1">Remote</p>
-                  <video
-                    ref={remoteVideoRef}
-                    autoPlay
-                    playsInline
-                    className="w-full h-48 rounded-xl object-cover bg-black"
-                  />
-                </div>
-              </div>
+              <VideoOnlyCall
+                localVideoRef={localVideoRef}
+                remoteVideoRef={remoteVideoRef}
+                toggleMute={toggleMute}
+                toggleVideo={toggleVideo} 
+                endCall={endCall}
+              />
             )}
-
-            {/* Controls */}
-            <div className="flex justify-center gap-3">
-              <button
-                onClick={toggleMute}
-                className={`px-5 py-2 rounded-full text-sm font-medium transition ${isMuted ? "bg-red-600 hover:bg-red-700" : "bg-gray-700 hover:bg-gray-600"}`}
-              >
-                {isMuted ? "🔇 Unmute" : "🎤 Mute"}
-              </button>
-              {!isAudioOnly && (
-                <button
-                  onClick={toggleVideo}
-                  className={`px-5 py-2 rounded-full text-sm font-medium transition ${isVideoOff ? "bg-red-600 hover:bg-red-700" : "bg-gray-700 hover:bg-gray-600"}`}
-                >
-                  {isVideoOff ? "📵 Start Video" : "📹 Stop Video"}
-                </button>
-              )}
-              <button
-                onClick={endCall}
-                className="px-5 py-2 bg-red-600 rounded-full text-sm font-medium hover:bg-red-700 transition"
-              >
-                📴 End Call
-              </button>
-            </div>
           </div>
         )}
       </div>
