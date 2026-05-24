@@ -467,6 +467,7 @@ const CallModal = () => {
                 endCall={endCall}
                 isMuted={isMuted}
                 isAudioOnly ={isAudioOnly }
+                isVideoOff={isVideoOff}
               />
             )}
           </div>
