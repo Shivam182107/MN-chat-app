@@ -108,6 +108,7 @@ const AudioOnlyCall = ({
                 ? "🟢 Speaking..."
                 : "🔵 Connected"}
           </span>
+          
         </div>
         {/* Controls */}
         <div className="flex justify-center gap-3 mt-8">
@@ -177,8 +178,8 @@ const AudioOnlyCall = ({
               ? "🟢 Speaking..."
               : "🔵 Connected"}
         </span>
-        <audio ref={remoteAudioRef} autoPlay playsInline />
       </div>
+        <audio ref={remoteAudioRef} autoPlay playsInline />
     </div>
   );
 };
