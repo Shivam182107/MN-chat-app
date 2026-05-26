@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useEffect, useState } from "react";
 import { TbSwitch3 } from "react-icons/tb";
 
 const VideoOnlyCall = ({
@@ -10,8 +10,14 @@ const VideoOnlyCall = ({
   isMuted,
   isAudioOnly,
   isVideoOff,
+   remoteStreamRef
 }) => {
   const [SwapVideoSides, setSwapVideoSide] = useState(false);
+  useEffect(()=>{
+    if(remoteStreamRef?.current&& remoteVideoRef.current){
+      remoteVideoRef.current.srcObject=remoteStreamRef.current
+    }
+  },[])
 
   return (
     <>
