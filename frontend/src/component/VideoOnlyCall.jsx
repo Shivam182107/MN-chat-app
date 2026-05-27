@@ -32,6 +32,7 @@ const VideoOnlyCall = ({
             ref={localVideoRef}
             autoPlay
             playsInline
+            muted
             className="w-full h-full object-cover bg-black"
           />
 
@@ -40,7 +41,6 @@ const VideoOnlyCall = ({
             <video
               ref={remoteVideoRef}
               autoPlay
-              muted
               playsInline
               className="w-full h-full object-cover bg-black"
             />
