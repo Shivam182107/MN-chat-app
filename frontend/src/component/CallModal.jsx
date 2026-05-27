@@ -142,10 +142,15 @@ const CallModal = () => {
       if (!peerRef.current) return;
       clearCallTimeout();
       callStartTimeRef.current = Date.now();
-      setCallState("in-call");
-      await peerRef.current.setRemoteDescription(
-        new RTCSessionDescription(answer),
-      );
+      try{
+
+        await peerRef.current.setRemoteDescription(
+          new RTCSessionDescription(answer),
+        );
+        setCallState("in-call");
+      }catch(e){
+        console.log(e)
+      }
     });
 
     // ICE candidate
