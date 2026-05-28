@@ -18,7 +18,7 @@ const VideoOnlyCall = ({
 
   useEffect(() => {
     if(mobileLocalRef.current && localVideoRef?.current){
-      mobileLocalRef.current.srcObject=localVideoRef.current
+      mobileLocalRef.current.srcObject=localVideoRef.current.srcObject
     }
     if(mobileRemoteRef.current && remoteStreamRef?.current){
       mobileRemoteRef.current.srcObject=remoteStreamRef.current
