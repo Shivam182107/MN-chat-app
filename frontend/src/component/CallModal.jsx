@@ -60,6 +60,7 @@ const CallModal = () => {
   const remoteIdRef = useRef("");
   const callStartTimeRef = useRef(null);
   const remoteStreamRef = useRef(null);
+ 
 
   // ── UI state ─────────────────────────────────────────────────────────────
   const [isMuted, setIsMuted] = useState(false);
@@ -559,6 +560,7 @@ const CallModal = () => {
                 isAudioOnly={isAudioOnly}
                 isVideoOff={isVideoOff}
                 remoteStreamRef={remoteStreamRef}
+                localStreamRef={localStreamRef}
               />
             )}
           </div>

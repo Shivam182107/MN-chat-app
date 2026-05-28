@@ -11,14 +11,15 @@ const VideoOnlyCall = ({
   isAudioOnly,
   isVideoOff,
   remoteStreamRef,
+  localStreamRef
 }) => {
   const [SwapVideoSides, setSwapVideoSide] = useState(false);
   const mobileLocalRef = useRef(null);
   const mobileRemoteRef = useRef(null);
 
   useEffect(() => {
-    if(mobileLocalRef.current && localVideoRef?.current){
-      mobileLocalRef.current.srcObject=localVideoRef.current.srcObject
+    if(mobileLocalRef.current && localStreamRef?.current){
+      mobileLocalRef.current.srcObject=localStreamRef.current
     }
     if(mobileRemoteRef.current && remoteStreamRef?.current){
       mobileRemoteRef.current.srcObject=remoteStreamRef.current
