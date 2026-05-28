@@ -10,11 +10,19 @@ const VideoOnlyCall = ({
   isMuted,
   isAudioOnly,
   isVideoOff,
-  remoteStreamRef
+  remoteStreamRef,
 }) => {
   const [SwapVideoSides, setSwapVideoSide] = useState(false);
-  
+  const mobileLocalRef = useRef(null);
+  const mobileRemoteRef = useRef(null);
+
   useEffect(() => {
+    if(mobileLocalRef.current && localVideoRef?.current){
+      mobileLocalRef.current.srcObject=localVideoRef.current
+    }
+    if(mobileRemoteRef.current && remoteStreamRef?.current){
+      mobileRemoteRef.current.srcObject=remoteStreamRef.current
+    }
     if (remoteStreamRef?.current && remoteVideoRef.current) {
       remoteVideoRef.current.srcObject = remoteStreamRef.current;
     }
@@ -23,13 +31,11 @@ const VideoOnlyCall = ({
   return (
     <>
       <div className="flex h-full w-full border-2 transition-all duration-150 bg-black">
-        
         {/* ── Mobile layout: full screen remote, local pip ── */}
         <div className="md:hidden relative w-full h-full">
-          
           {/* Remote video — full screen on mobile */}
           <video
-            ref={localVideoRef}
+            ref={mobileLocalRef}
             autoPlay
             playsInline
             muted
@@ -39,7 +45,7 @@ const VideoOnlyCall = ({
           {/* Local video — small pip top-right on mobile */}
           <div className="absolute top-4 right-4 w-28 h-40 rounded-xl overflow-hidden border border-gray-600 shadow-lg">
             <video
-              ref={remoteVideoRef}
+              ref={mobileRemoteRef}
               autoPlay
               playsInline
               className="w-full h-full object-cover bg-black"
@@ -135,7 +141,6 @@ const VideoOnlyCall = ({
             className="w-full h-full rounded-xl object-cover bg-black"
           />
         </div>
-
       </div>
     </>
   );
