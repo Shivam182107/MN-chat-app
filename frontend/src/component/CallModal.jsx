@@ -374,6 +374,17 @@ const CallModal = () => {
     await peer.setRemoteDescription(
       new RTCSessionDescription(incomingCall.offer),
     );
+      console.log("acceptCall: flushing", iceCandidateBuffer.current.length, "buffered candidates");
+    for(let i of iceCandidateBuffer.current){
+      try{
+        await peerRef.current.addIceCandidate(new RTCIceCandidate(i));
+         console.log("acceptCall: flushed ICE OK");
+      }
+      catch(e){
+         console.error("acceptCall flush error:", e);
+      }
+    }
+    iceCandidateBuffer.current=[];
     const answer = await peer.createAnswer();
     await peer.setLocalDescription(answer);
     // callerId here = the caller's _id, send answer back to them
