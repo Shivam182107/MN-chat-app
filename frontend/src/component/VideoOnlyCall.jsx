@@ -29,9 +29,23 @@ const VideoOnlyCall = ({
     }
   }, []);
 
+  function handleSwapVideoSides(){
+    const mobileLocal=mobileLocalRef.current.srcObject
+    const mobileRemote=mobileRemoteRef.current.srcObject
+    if(mobileLocalRef.current&&mobileRemoteRef.current){
+      mobileLocalRef.current.srcObject=mobileRemote
+      mobileRemoteRef.current.srcObject=mobileLocal
+    }
+    const desktopLocal=localVideoRef.current.srcObject
+    const desktopRemote=remoteVideoRef.current.srcObject
+    if(localVideoRef.current&&remoteVideoRef.current){
+      localVideoRef.current.srcObject=desktopRemote
+      remoteVideoRef.current.srcObject=desktopLocal
+    }
+  }
   return (
     <>
-      <div className="flex h-full w-full border-2 transition-all duration-150 bg-black">
+      <div className="flex h-full w-full border-2 transition-all duration-150 bg-black gap-2">
         {/* ── Mobile layout: full screen remote, local pip ── */}
         <div className="md:hidden relative w-full h-full">
           {/* Remote video — full screen on mobile */}
@@ -77,7 +91,7 @@ const VideoOnlyCall = ({
             </button>
             <button
               className="px-4 py-2 bg-gray-700 hover:bg-gray-600 rounded-full text-sm font-medium transition"
-              onClick={() => setSwapVideoSide((prev) => !prev)}
+              onClick={handleSwapVideoSides}
             >
               <TbSwitch3 />
             </button>
@@ -89,7 +103,7 @@ const VideoOnlyCall = ({
           className="hidden md:flex md:w-[410px] h-full flex-shrink-0 text-white flex-col justify-center items-center relative"
           style={{ background: "#0d0e0eff", borderRight: "1px solid #2E2F2F" }}
         >
-          <p className="text-xs text-gray-400 mb-1">You</p>
+          {/* <p className="text-xs text-gray-400 mb-1">You</p> */}
           <video
             ref={localVideoRef}
             autoPlay
@@ -122,7 +136,7 @@ const VideoOnlyCall = ({
             </button>
             <button
               className="px-5 py-2 bg-gray-700 hover:bg-gray-600 rounded-full text-sm font-medium transition"
-              onClick={() => setSwapVideoSide((prev) => !prev)}
+              onClick={handleSwapVideoSides}
             >
               <TbSwitch3 />
             </button>
@@ -134,7 +148,7 @@ const VideoOnlyCall = ({
           className="hidden md:flex flex-1 flex-col items-center justify-center gap-3 relative"
           style={{ background: "#0d0e0eff" }}
         >
-          <p className="text-xs text-gray-400 mb-1">Remote</p>
+          {/* <p className="text-xs text-gray-400 mb-1">Remote</p> */}
           <video
             ref={remoteVideoRef}
             autoPlay
