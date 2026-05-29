@@ -483,7 +483,7 @@ const CallModal = () => {
       <div
         className={
           callState === "in-call"
-            ? "h-screen flex flex-col bg-[#F7F5F3] w-full"
+            ? "h-[100dvh] flex flex-col bg-[#F7F5F3] w-full"
             : "bg-black rounded-2xl shadow-2xl p-6 w-[90vw] max-w-[700px] text-white flex flex-col gap-4"
         }
       >
