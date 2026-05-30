@@ -10,7 +10,7 @@ const AudioOnlyCall = ({
   toggleMute,
   endCall,
   remoteAudioRef,
-  IsRemoteUserMuted
+  IsRemoteUserMuted,
 }) => {
   return (
     <div className="flex h-full w-full  border-2 transition-all duration-150 bg-black">
@@ -19,8 +19,6 @@ const AudioOnlyCall = ({
         className={`md:w-[410px] h-full flex-shrink-0 w-full bg-[#161717] text-white border-r border-black flex flex-col justify-center mb-4 relative items-center `}
         style={{ background: "#0d0e0eff", borderRight: "1px solid #2E2F2F" }}
       >
-        
-
         <div
           className="w-20 h-20 rounded-full flex items-center justify-center text-3xl transition-all duration-200"
           style={{
@@ -56,19 +54,29 @@ const AudioOnlyCall = ({
                 : { background: "#1e293b", color: "#60a5fa" }
           }
         >
-          {isMuted
-             ? <span className="flex justify-center items-center gap-1"><AiOutlineAudioMuted/> Muted</span>
-            : isSpeaking
-              ? <span className="flex justify-center items-center gap-1"><HiMiniSpeakerWave/> Speaking</span>
-              : <span >Connected </span>}
+          {isMuted ? (
+            <span className="flex justify-center items-center gap-1">
+              <AiOutlineAudioMuted /> Muted
+            </span>
+          ) : isSpeaking ? (
+            <span className="flex justify-center items-center gap-1">
+              <HiMiniSpeakerWave /> Speaking
+            </span>
+          ) : (
+            <span>Connected </span>
+          )}
         </span>
 
         {/* mobile view of remote audio call ui  */}
         <div
-          className="flex-1 md:hidden flex  flex-col items-center justify-center gap-3 h-[250px] w-[100px] absolute top-4 right-4"
-          style={{ background: "#0d0e0eff", borderRight: "1px solid #2E2F2F" }}
+          className="md:hidden flex flex-col items-center justify-center gap-2 absolute top-4 right-4 rounded-2xl py-4 px-3"
+          style={{
+            background: "#1a1b1bdd",
+            border: "1px solid #2E2F2F",
+            width: "130px",
+            backdropFilter: "blur(6px)",
+          }}
         >
-
           <div
             className="w-20 h-20 rounded-full flex items-center justify-center text-3xl transition-all duration-200"
             style={{
@@ -104,28 +112,42 @@ const AudioOnlyCall = ({
                   : { background: "#1e293b", color: "#60a5fa" }
             }
           >
-            {IsRemoteUserMuted
-            ? <span  className="flex justify-center items-center gap-1"><AiOutlineAudioMuted/> Muted</span>
-            : isSpeaking
-              ? <span className="flex justify-center items-center gap-1"><HiMiniSpeakerWave/> Speaking</span>
-              : <span >Connected </span>}
+            {IsRemoteUserMuted ? (
+              <span className="flex justify-center items-center gap-1">
+                <AiOutlineAudioMuted /> Muted
+              </span>
+            ) : isSpeaking ? (
+              <span className="flex justify-center items-center gap-1">
+                <HiMiniSpeakerWave /> Speaking
+              </span>
+            ) : (
+              <span>Connected </span>
+            )}
           </span>
-          
         </div>
         {/* Controls */}
         <div className="absolute bottom-6 left-0 right-0 flex justify-center gap-3">
           <button
             onClick={toggleMute}
-            className={`px-5 py-2 rounded text-sm font-medium transition ${isMuted ? "bg-red-600 hover:bg-red-700" : "bg-gray-700 hover:bg-gray-600"}`}
+            className={`px-5 py-2 rounded-[50px] text-sm font-medium transition ${isMuted ? "bg-red-600 hover:bg-red-700" : "bg-gray-700 hover:bg-gray-600"}`}
           >
-            {isMuted ? <span className="flex justify-center items-center gap-1"><GoUnmute/> UnMute</span> : <span className="flex justify-center items-center gap-1"> <AiOutlineAudioMuted/> Mute</span>}
+            {isMuted ? (
+              <span className="flex justify-center items-center gap-1">
+                <GoUnmute /> UnMute
+              </span>
+            ) : (
+              <span className="flex justify-center items-center gap-1">
+                {" "}
+                <AiOutlineAudioMuted /> Mute
+              </span>
+            )}
           </button>
 
           <button
             onClick={endCall}
-            className="px-5 py-2 bg-red-600 rounded font-medium hover:bg-red-700 transition"
+            className="px-5 py-2 bg-red-600 rounded-[50px] font-medium hover:bg-red-700 transition"
           >
-             <MdCallEnd  size={20}/>
+            <MdCallEnd size={20} />
           </button>
         </div>
       </div>
@@ -135,8 +157,6 @@ const AudioOnlyCall = ({
         className="flex-1 md:flex hidden flex-col items-center justify-center gap-3 relative"
         style={{ background: "#0d0e0eff", borderRight: "1px solid #2E2F2F" }}
       >
-        
-
         <div
           className="w-20 h-20 rounded-full flex items-center justify-center text-3xl transition-all duration-200"
           style={{
@@ -172,14 +192,20 @@ const AudioOnlyCall = ({
                 : { background: "#1e293b", color: "#60a5fa" }
           }
         >
-          {IsRemoteUserMuted
-           ? <span className="flex justify-center items-center gap-1"><AiOutlineAudioMuted/> Muted</span>
-            : isSpeaking
-              ? <span className="flex justify-center items-center gap-1"><HiMiniSpeakerWave/> Speaking</span>
-              : <span >Connected </span>}
+          {IsRemoteUserMuted ? (
+            <span className="flex justify-center items-center gap-1">
+              <AiOutlineAudioMuted /> Muted
+            </span>
+          ) : isSpeaking ? (
+            <span className="flex justify-center items-center gap-1">
+              <HiMiniSpeakerWave /> Speaking
+            </span>
+          ) : (
+            <span>Connected </span>
+          )}
         </span>
       </div>
-        <audio ref={remoteAudioRef} autoPlay playsInline />
+      <audio ref={remoteAudioRef} autoPlay playsInline />
     </div>
   );
 };

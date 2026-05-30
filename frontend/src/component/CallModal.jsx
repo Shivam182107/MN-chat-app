@@ -457,7 +457,7 @@ const CallModal = () => {
 
   return (
     <div
-      className={`fixed inset-0 z-50 flex items-center justify-center bg-black/70 backdrop-blur-sm ${callState === "in-call" && "h-screen"} `}
+      className={`fixed inset-0 z-50 flex items-center justify-center bg-black/70 backdrop-blur-sm  `}
     >
       <div
         className={
@@ -542,6 +542,7 @@ const CallModal = () => {
                 remoteStreamRef={remoteStreamRef}
                 localStreamRef={localStreamRef}
                 IsRemoteUserMuted={IsRemoteUserMuted}
+                 remoteUser={otherUser}
               />
             )}
           </div>
