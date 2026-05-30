@@ -72,6 +72,7 @@ io.on("connection", (socket) => {
   });
   socket.on("end-call", (receiverId) => socket.to(receiverId).emit("call-ended"));
   socket.on("reject-call", (receiverId) => socket.to(receiverId).emit("call-rejected"));
+  socket.on("remote-mute",(isMute,receiverId)=>{socket.to(receiverId).emit("remote-user-muted",isMute)})
 });
 server.listen(3000, () => {
   console.log("app is runnning on this port :", 3000);
