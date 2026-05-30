@@ -307,7 +307,7 @@ const Home = () => {
 
   return (
     <>
-      <div className="h-screen flex flex-col bg-[#F7F5F3]">
+      <div className="h-[100dvh] flex flex-col bg-[#F7F5F3]">
         <Navabar profileActivate={profileActivate} />
 
         <div className="flex flex-1 overflow-hidden relative">

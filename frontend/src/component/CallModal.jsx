@@ -70,6 +70,7 @@ const CallModal = () => {
   const [timeoutCountdown, setTimeoutCountdown] = useState(0);
   const remoteAudioRef = useRef();
   const iceCandidateBuffer = useRef([]);
+  const [IsRemoteUserMuted,setIsRemoteUserMuted]=useState(false);
 
   // ── Refs for cleanup ─────────────────────────────────────────────────────
   const animFrameRef = useRef(null);
@@ -149,33 +150,33 @@ const CallModal = () => {
         await peerRef.current.setRemoteDescription(
           new RTCSessionDescription(answer),
         );
-        console.log("remoteDesc set, flushing", iceCandidateBuffer.current.length, "buffered candidates");
+        // console.log("remoteDesc set, flushing", iceCandidateBuffer.current.length, "buffered candidates");
         for(let i of iceCandidateBuffer.current){
           try{
             await peerRef.current.addIceCandidate(new RTCIceCandidate(i))
-              console.log("flushed buffered ICE OK");
+              // console.log("flushed buffered ICE OK");
             }
-            catch (e) { console.error("flush error:", e); }
+             catch (e) { console.error("flush error:", e); }
         }
         iceCandidateBuffer.current=[];
         setCallState("in-call");
       } catch (e) {
-        console.log("call-answered error:", e);
+        // console.log("call-answered error:", e);
       }
     });
 
     // ICE candidate
     socketRef.current.on("ice-candidate", async (candidate) => {
       if (!peerRef.current || !peerRef.current.remoteDescription) {
-        console.log("buffering ICE — remoteDescription not ready yet");
+        // console.log("buffering ICE — remoteDescription not ready yet");
         iceCandidateBuffer.current.push(candidate);
         return;
       }
       try {
         await peerRef.current.addIceCandidate(new RTCIceCandidate(candidate));
-        console.log("ICE candidate added OK");
+        // console.log("ICE candidate added OK");
       } catch (e) {
-        console.error("ICE error:", e);
+        // console.error("ICE error:", e);
       }
     });
 
@@ -206,6 +207,9 @@ const CallModal = () => {
       });
       cleanupCall();
     });
+    socketRef.current.on("remote-user-muted",(isMute)=>{
+      setIsRemoteUserMuted(isMute)
+    })
 
     return () => {
       socketRef.current.off("call-cancelled");
@@ -213,6 +217,7 @@ const CallModal = () => {
       socketRef.current.off("ice-candidate");
       socketRef.current.off("call-ended");
       socketRef.current.off("call-rejected");
+      socketRef.current.off("remote-user-muted");
     };
   }, [isScoketConnected]);
 
@@ -229,7 +234,7 @@ const CallModal = () => {
       if (!withVideo) startSpeakingDetection(stream);
       return stream;
     } catch (e) {
-      console.error("Media error:", e);
+      // console.error("Media error:", e);
       alert("Media error: " + e.message);
       return null;
     }
@@ -245,16 +250,9 @@ const CallModal = () => {
   // ── Create peer connection ────────────────────────────────────────────────
   function createPeerConnection(remoteId) {
     const peer = new RTCPeerConnection(ICE_SERVERS);
-    // peer.onicecandidate = (e) => {
-    //   if (e.candidate)
-    //     socketRef.current.emit("ice-candidate", remoteId, e.candidate);
-    // };
     peer.onicecandidate = (e) => {
-      if (e.candidate) {
-        console.log("ICE candidate:", e.candidate.type, e.candidate.protocol);
+      if (e.candidate) { 
         socketRef.current.emit("ice-candidate", remoteId, e.candidate);
-      } else {
-        console.log("ICE gathering complete");
       }
     };
     peer.ontrack = (e) => {
@@ -271,54 +269,31 @@ const CallModal = () => {
         .getTracks()
         .forEach((t) => peer.addTrack(t, localStreamRef.current));
     }
-    // peer.onconnectionstatechange = () => {
-    //   if (
-    //     peer.connectionState === "disconnected" ||
-    //     peer.connectionState === "failed"
-    //   )
-    //     cleanupCall();
-    // };
+
     peer.onconnectionstatechange = () => {
-      console.log("Connection state:", peer.connectionState);
-      if (peer.connectionState === "connected") {
-        console.log("CONNECTED - media should be flowing now");
-      }
       if (
         peer.connectionState === "disconnected" ||
         peer.connectionState === "failed"
       ) {
-        console.log("FAILED/DISCONNECTED - cleaning up");
+       
         cleanupCall();
       }
     };
     return peer;
   }
-  // useEffect(()=>{
-  //   if(callState=="in-call"&& remoteStreamRef.current){
-  //     if(remoteVideoRef.current){
-  //       remoteVideoRef.current.srcObject=remoteStreamRef.current
-  //     }
-  //     if(remoteAudioRef.current){
-  //       remoteAudioRef.current.srcObject=remoteStreamRef.current
-  //     }
-  //   }
-  // },[callState])
+
 
   useEffect(() => {
     if (callState === "in-call" && remoteStreamRef.current) {
-      console.log("callState=in-call, re-assigning remoteStream");
+      
       if (remoteVideoRef.current) {
         remoteVideoRef.current.srcObject = remoteStreamRef.current;
-        console.log("remoteVideoRef assigned via useEffect");
-      } else {
-        console.log("remoteVideoRef still NULL in useEffect");
-      }
+        
+      } 
       if (remoteAudioRef.current) {
         remoteAudioRef.current.srcObject = remoteStreamRef.current;
-        console.log("remoteAudioRef assigned via useEffect");
-      } else {
-        console.log("remoteAudioRef still NULL in useEffect");
-      }
+        
+      } 
     }
   }, [callState]);
   // ── INITIATE CALL ─────────────────────────────────────────────────────────
@@ -375,14 +350,14 @@ const CallModal = () => {
     await peer.setRemoteDescription(
       new RTCSessionDescription(incomingCall.offer),
     );
-      console.log("acceptCall: flushing", iceCandidateBuffer.current.length, "buffered candidates");
+      // console.log("acceptCall: flushing", iceCandidateBuffer.current.length, "buffered candidates");
     for(let i of iceCandidateBuffer.current){
       try{
         await peerRef.current.addIceCandidate(new RTCIceCandidate(i));
-         console.log("acceptCall: flushed ICE OK");
+        //  console.log("acceptCall: flushed ICE OK");
       }
       catch(e){
-         console.error("acceptCall flush error:", e);
+        //  console.error("acceptCall flush error:", e);
       }
     }
     iceCandidateBuffer.current=[];
@@ -448,6 +423,7 @@ const CallModal = () => {
     setIsMuted(false);
     setIsVideoOff(false);
     setIsAudioOnly(false);
+    setIsRemoteUserMuted(false);
   }
 
   // ── Media toggles ─────────────────────────────────────────────────────────
@@ -456,7 +432,10 @@ const CallModal = () => {
     localStreamRef.current
       .getAudioTracks()
       .forEach((t) => (t.enabled = !t.enabled));
-    setIsMuted((p) => !p);
+    setIsMuted((p) => {
+      socketRef.current.emit("remote-mute",!p,remoteIdRef.current)
+      return !p
+    });
   }
 
   function toggleVideo() {
@@ -541,10 +520,11 @@ const CallModal = () => {
               <AudioOnlyCall
                 isSpeaking={isSpeaking}
                 isMuted={isMuted}
+                IsRemoteUserMuted={IsRemoteUserMuted}
                 localUser={User}
                 remoteUser={otherUser}
                 toggleMute={toggleMute}
-                toggleVideo={toggleVideo}
+                
                 endCall={endCall}
                 remoteAudioRef={remoteAudioRef}
               />
@@ -561,6 +541,7 @@ const CallModal = () => {
                 isVideoOff={isVideoOff}
                 remoteStreamRef={remoteStreamRef}
                 localStreamRef={localStreamRef}
+                IsRemoteUserMuted={IsRemoteUserMuted}
               />
             )}
           </div>

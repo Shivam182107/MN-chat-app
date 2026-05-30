@@ -1,5 +1,11 @@
 import React, { useEffect, useRef, useState } from "react";
 import { TbSwitch3 } from "react-icons/tb";
+import { BsFillCameraVideoOffFill } from "react-icons/bs";
+import { FaVideo } from "react-icons/fa";
+import { MdCallEnd } from "react-icons/md";
+import { AiOutlineAudioMuted } from "react-icons/ai";
+
+import { GoUnmute } from "react-icons/go";
 
 const VideoOnlyCall = ({
   localVideoRef,
@@ -11,44 +17,43 @@ const VideoOnlyCall = ({
   isAudioOnly,
   isVideoOff,
   remoteStreamRef,
-  localStreamRef
+  localStreamRef,
+  IsRemoteUserMuted,
 }) => {
-  const [SwapVideoSides, setSwapVideoSide] = useState(false);
+  
   const mobileLocalRef = useRef(null);
   const mobileRemoteRef = useRef(null);
 
   useEffect(() => {
-    if(mobileLocalRef.current && localStreamRef?.current){
-      mobileLocalRef.current.srcObject=localStreamRef.current
+    if (mobileLocalRef.current && localStreamRef?.current) {
+      mobileLocalRef.current.srcObject = localStreamRef.current;
     }
-    if(mobileRemoteRef.current && remoteStreamRef?.current){
-      mobileRemoteRef.current.srcObject=remoteStreamRef.current
+    if (mobileRemoteRef.current && remoteStreamRef?.current) {
+      mobileRemoteRef.current.srcObject = remoteStreamRef.current;
     }
     if (remoteStreamRef?.current && remoteVideoRef.current) {
       remoteVideoRef.current.srcObject = remoteStreamRef.current;
     }
   }, []);
 
-  function handleSwapVideoSides(){
-    const mobileLocal=mobileLocalRef.current.srcObject
-    const mobileRemote=mobileRemoteRef.current.srcObject
-    if(mobileLocalRef.current&&mobileRemoteRef.current){
-      mobileLocalRef.current.srcObject=mobileRemote
-      mobileRemoteRef.current.srcObject=mobileLocal
+  function handleSwapVideoSides() {
+    const mobileLocal = mobileLocalRef.current.srcObject;
+    const mobileRemote = mobileRemoteRef.current.srcObject;
+    if (mobileLocalRef.current && mobileRemoteRef.current) {
+      mobileLocalRef.current.srcObject = mobileRemote;
+      mobileRemoteRef.current.srcObject = mobileLocal;
     }
-    const desktopLocal=localVideoRef.current.srcObject
-    const desktopRemote=remoteVideoRef.current.srcObject
-    if(localVideoRef.current&&remoteVideoRef.current){
-      localVideoRef.current.srcObject=desktopRemote
-      remoteVideoRef.current.srcObject=desktopLocal
+    const desktopLocal = localVideoRef.current.srcObject;
+    const desktopRemote = remoteVideoRef.current.srcObject;
+    if (localVideoRef.current && remoteVideoRef.current) {
+      localVideoRef.current.srcObject = desktopRemote;
+      remoteVideoRef.current.srcObject = desktopLocal;
     }
   }
   return (
     <>
       <div className="flex h-full w-full border-2 transition-all duration-150 bg-black gap-2">
-        {/* ── Mobile layout: full screen remote, local pip ── */}
         <div className="md:hidden relative w-full h-full">
-          {/* Remote video — full screen on mobile */}
           <video
             ref={mobileLocalRef}
             autoPlay
@@ -57,7 +62,6 @@ const VideoOnlyCall = ({
             className="w-full h-full object-cover bg-black"
           />
 
-          {/* Local video — small pip top-right on mobile */}
           <div className="absolute top-4 right-4 w-28 h-40 rounded-xl overflow-hidden border border-gray-600 shadow-lg">
             <video
               ref={mobileRemoteRef}
@@ -65,29 +69,47 @@ const VideoOnlyCall = ({
               playsInline
               className="w-full h-full object-cover bg-black"
             />
+            {IsRemoteUserMuted && (
+              <div className="absolute bottom-1 left-0 right-0 flex justify-center">
+                <span
+                  className="flex items-center gap-1 text-xs px-2 py-0.5 rounded-full"
+                  style={{ background: "#3a1a1a", color: "#f87171" }}
+                >
+                  <AiOutlineAudioMuted /> Muted
+                </span>
+              </div>
+            )}
           </div>
 
-          {/* Controls — bottom center on mobile */}
           <div className="absolute bottom-6 left-0 right-0 flex justify-center gap-3 px-4">
             <button
               onClick={toggleMute}
-              className={`px-4 py-2 rounded-full text-sm font-medium transition ${isMuted ? "bg-red-600 hover:bg-red-700" : "bg-gray-700 hover:bg-gray-600"}`}
+              className={`px-5 py-2 rounded-full text-sm font-medium transition ${isMuted ? "bg-red-600 hover:bg-red-700" : "bg-gray-700 hover:bg-gray-600"}`}
             >
-              {isMuted ? "🔇" : "🎤"}
+              {isMuted ? (
+                <span>
+                  <GoUnmute /> UnMute
+                </span>
+              ) : (
+                <span>
+                  <AiOutlineAudioMuted /> Mute
+                </span>
+              )}
             </button>
+
             {!isAudioOnly && (
               <button
                 onClick={toggleVideo}
                 className={`px-4 py-2 rounded-full text-sm font-medium transition ${isVideoOff ? "bg-red-600 hover:bg-red-700" : "bg-gray-700 hover:bg-gray-600"}`}
               >
-                {isVideoOff ? "📵" : "📹"}
+                {isVideoOff ? <BsFillCameraVideoOffFill /> : <FaVideo />}
               </button>
             )}
             <button
               onClick={endCall}
-              className="px-4 py-2 bg-red-600 rounded-full text-sm font-medium hover:bg-red-700 transition"
+              className="px-5 py-2 bg-red-600 rounded-full font-medium hover:bg-red-700 transition"
             >
-              📴
+              <MdCallEnd size={20} />
             </button>
             <button
               className="px-4 py-2 bg-gray-700 hover:bg-gray-600 rounded-full text-sm font-medium transition"
@@ -118,21 +140,29 @@ const VideoOnlyCall = ({
               onClick={toggleMute}
               className={`px-5 py-2 rounded-full text-sm font-medium transition ${isMuted ? "bg-red-600 hover:bg-red-700" : "bg-gray-700 hover:bg-gray-600"}`}
             >
-              {isMuted ? "🔇 Unmute" : "🎤 Mute"}
+              {isMuted ? (
+                <span>
+                  <GoUnmute /> UnMute
+                </span>
+              ) : (
+                <span>
+                  <AiOutlineAudioMuted /> Mute
+                </span>
+              )}
             </button>
             {!isAudioOnly && (
               <button
                 onClick={toggleVideo}
-                className={`px-5 py-2 rounded-full text-sm font-medium transition ${isVideoOff ? "bg-red-600 hover:bg-red-700" : "bg-gray-700 hover:bg-gray-600"}`}
+                className={`px-4 py-2 rounded-full text-sm font-medium transition ${isVideoOff ? "bg-red-600 hover:bg-red-700" : "bg-gray-700 hover:bg-gray-600"}`}
               >
-                {isVideoOff ? "📵 Start Video" : "📹 Stop Video"}
+                {isVideoOff ? <BsFillCameraVideoOffFill /> : <FaVideo />}
               </button>
             )}
             <button
               onClick={endCall}
-              className="px-5 py-2 bg-red-600 rounded-full text-sm font-medium hover:bg-red-700 transition"
+              className="px-5 py-2 bg-red-600 rounded-full font-medium hover:bg-red-700 transition"
             >
-              📴 End Call
+              <MdCallEnd size={20} />
             </button>
             <button
               className="px-5 py-2 bg-gray-700 hover:bg-gray-600 rounded-full text-sm font-medium transition"
@@ -155,6 +185,16 @@ const VideoOnlyCall = ({
             playsInline
             className="w-full h-full rounded-xl object-cover bg-black"
           />
+          {IsRemoteUserMuted && (
+            <div className="absolute bottom-6 left-0 right-0 flex justify-center">
+              <span
+                className="flex items-center gap-1.5 text-sm px-4 py-1.5 rounded-full"
+                style={{ background: "#3a1a1a", color: "#f87171" }}
+              >
+                <AiOutlineAudioMuted /> Remote is muted
+              </span>
+            </div>
+          )}
         </div>
       </div>
     </>
