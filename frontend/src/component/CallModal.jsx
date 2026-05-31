@@ -1,37 +1,33 @@
 import { useContext, useEffect, useRef, useState } from "react";
 import { chatContext } from "../context/ChatContext";
 import { authContext } from "../context/AuthContext";
-import { getSenderDetails } from "../config/ChatLogic";
 import IncomingCallModal from "./IncomingCallModal";
 import AudioOnlyCall from "./AudioOnlyCall";
 import VideoOnlyCall from "./VideoOnlyCall";
 
 const ICE_SERVERS = {
   iceServers: [
-    // Google STUN
     { urls: "stun:stun.l.google.com:19302" },
     { urls: "stun:stun1.l.google.com:19302" },
-
-    // Metered TURN
     {
       urls: "turn:global.relay.metered.ca:80",
-      username: "59e39119bb96d93d0c5f5390",
-      credential: "MDGAq6ct5hNPwUKu",
+      username: import.meta.env.VITE_TURN_USERNAME,
+      credential: import.meta.env.VITE_TURN_CREDENTIAL,
     },
     {
       urls: "turn:global.relay.metered.ca:80?transport=tcp",
-      username: "59e39119bb96d93d0c5f5390",
-      credential: "MDGAq6ct5hNPwUKu",
+      username: import.meta.env.VITE_TURN_USERNAME,
+      credential: import.meta.env.VITE_TURN_CREDENTIAL,
     },
     {
       urls: "turn:global.relay.metered.ca:443",
-      username: "59e39119bb96d93d0c5f5390",
-      credential: "MDGAq6ct5hNPwUKu",
+      username: import.meta.env.VITE_TURN_USERNAME,
+      credential: import.meta.env.VITE_TURN_CREDENTIAL,
     },
     {
       urls: "turns:global.relay.metered.ca:443?transport=tcp",
-      username: "59e39119bb96d93d0c5f5390",
-      credential: "MDGAq6ct5hNPwUKu",
+      username: import.meta.env.VITE_TURN_USERNAME,
+      credential: import.meta.env.VITE_TURN_CREDENTIAL,
     },
   ],
 };
@@ -40,7 +36,6 @@ const CALL_TIMEOUT_SECONDS = 60;
 
 const CallModal = () => {
   const { socketRef, isScoketConnected, User } = useContext(authContext);
-  //   const { selectedChat, callState, setCallState, incomingCall, setIncomingCall, callHistory, setCallHistory } = useContext(chatContext);
   const {
     selectedChat,
     callState,
@@ -52,7 +47,7 @@ const CallModal = () => {
     startCallRef,
   } = useContext(chatContext);
 
-  // ── WebRTC refs ───────────────────────────────────────────────────────────
+  // ──────── WebRTC refs ────────
   const peerRef = useRef(null);
   const localStreamRef = useRef(null);
   const localVideoRef = useRef(null);
@@ -62,7 +57,7 @@ const CallModal = () => {
   const remoteStreamRef = useRef(null);
  
 
-  // ── UI state ─────────────────────────────────────────────────────────────
+  // ────── UI state ────────────
   const [isMuted, setIsMuted] = useState(false);
   const [isVideoOff, setIsVideoOff] = useState(false);
   const [isAudioOnly, setIsAudioOnly] = useState(false);
@@ -72,7 +67,7 @@ const CallModal = () => {
   const iceCandidateBuffer = useRef([]);
   const [IsRemoteUserMuted,setIsRemoteUserMuted]=useState(false);
 
-  // ── Refs for cleanup ─────────────────────────────────────────────────────
+  // ──────────── Refs for cleanup ─────────
   const animFrameRef = useRef(null);
   const timeoutTimerRef = useRef(null);
   const timeoutCancelRef = useRef(null);
@@ -80,7 +75,7 @@ const CallModal = () => {
   // get other user's info from selectedChat
   const otherUser = selectedChat?.users?.find((u) => u._id !== User._id);
 
-  // ── Speaking detection ───────────────────────────────────────────────────
+  // ──────── Speaking detection ──────────
   function startSpeakingDetection(stream) {
     const audioCtx = new (window.AudioContext || window.webkitAudioContext)();
     const source = audioCtx.createMediaStreamSource(stream);
@@ -102,12 +97,12 @@ const CallModal = () => {
     setIsSpeaking(false);
   }
 
-  // ── History helper ───────────────────────────────────────────────────────
+  // ──────── History helper ────
   function addToHistory(entry) {
     setCallHistory((prev) => [{ id: Date.now(), ...entry }, ...prev]);
   }
 
-  // ── Timeout ──────────────────────────────────────────────────────────────
+  // ─ Timeout ──────────────────
   function startCallTimeout(receiverId) {
     setTimeoutCountdown(CALL_TIMEOUT_SECONDS);
     timeoutTimerRef.current = setInterval(() => {
@@ -150,33 +145,33 @@ const CallModal = () => {
         await peerRef.current.setRemoteDescription(
           new RTCSessionDescription(answer),
         );
-        // console.log("remoteDesc set, flushing", iceCandidateBuffer.current.length, "buffered candidates");
+        
         for(let i of iceCandidateBuffer.current){
           try{
             await peerRef.current.addIceCandidate(new RTCIceCandidate(i))
-              // console.log("flushed buffered ICE OK");
+
             }
              catch (e) { console.error("flush error:", e); }
         }
         iceCandidateBuffer.current=[];
         setCallState("in-call");
       } catch (e) {
-        // console.log("call-answered error:", e);
+        console.log("call-answered error:", e);
       }
     });
 
     // ICE candidate
     socketRef.current.on("ice-candidate", async (candidate) => {
       if (!peerRef.current || !peerRef.current.remoteDescription) {
-        // console.log("buffering ICE — remoteDescription not ready yet");
+       
         iceCandidateBuffer.current.push(candidate);
         return;
       }
       try {
         await peerRef.current.addIceCandidate(new RTCIceCandidate(candidate));
-        // console.log("ICE candidate added OK");
+        
       } catch (e) {
-        // console.error("ICE error:", e);
+        console.error("ICE error:", e);
       }
     });
 
@@ -221,7 +216,7 @@ const CallModal = () => {
     };
   }, [isScoketConnected]);
 
-  // ── Get local stream ─────────────────────────────────────────────────────
+  // ── Get local stream ────────────────
   // Replace getLocalStream's setTimeout with a useEffect
   async function getLocalStream(withVideo) {
     try {
@@ -230,24 +225,24 @@ const CallModal = () => {
         audio: true,
       });
       localStreamRef.current = stream;
-      // Remove the setTimeout — handle in useEffect below
+      
       if (!withVideo) startSpeakingDetection(stream);
       return stream;
     } catch (e) {
-      // console.error("Media error:", e);
+    
       alert("Media error: " + e.message);
       return null;
     }
   }
 
-  // Add this useEffect to assign local video when the element is ready:
+  
   useEffect(() => {
     if (localVideoRef.current && localStreamRef.current) {
       localVideoRef.current.srcObject = localStreamRef.current;
     }
-  }, [callState]); // re-runs when callState changes to "in-call" and video element renders
+  }, [callState]); 
 
-  // ── Create peer connection ────────────────────────────────────────────────
+  // ── Create peer connection ─────────────
   function createPeerConnection(remoteId) {
     const peer = new RTCPeerConnection(ICE_SERVERS);
     peer.onicecandidate = (e) => {
@@ -296,10 +291,7 @@ const CallModal = () => {
       } 
     }
   }, [callState]);
-  // ── INITIATE CALL ─────────────────────────────────────────────────────────
-  // Called from MessageContainer when user clicks Voice/Video call button
-  // withVideo: true = video call, false = audio only
-  // receiverId: other user's MongoDB _id
+ 
   async function initiateCall(withVideo, receiverId, callerData) {
     const stream = await getLocalStream(withVideo);
     if (!stream) return;
@@ -310,7 +302,7 @@ const CallModal = () => {
     peerRef.current = peer;
     const offer = await peer.createOffer();
     await peer.setLocalDescription(offer);
-    // callerId = User._id (server will emit to this room to send answer back)
+   
     socketRef.current.emit(
       "call-user",
       receiverId,
@@ -322,7 +314,7 @@ const CallModal = () => {
     startCallTimeout(receiverId);
   }
 
-  // ── CANCEL CALL ───────────────────────────────────────────────────────────
+  // ── CANCEL CALL ──────
   function cancelCall(receiverId, timedOut = false) {
     clearCallTimeout();
     socketRef.current.emit("call-cancelled", receiverId, User._id);
@@ -337,7 +329,7 @@ const CallModal = () => {
     // if (timedOut) alert("No answer. Call ended automatically.");
   }
 
-  // ── ACCEPT CALL ───────────────────────────────────────────────────────────
+  // ── ACCEPT CALL ───
   async function acceptCall(withVideo) {
     if (!incomingCall) return;
     const stream = await getLocalStream(withVideo);
@@ -350,26 +342,26 @@ const CallModal = () => {
     await peer.setRemoteDescription(
       new RTCSessionDescription(incomingCall.offer),
     );
-      // console.log("acceptCall: flushing", iceCandidateBuffer.current.length, "buffered candidates");
+      
     for(let i of iceCandidateBuffer.current){
       try{
         await peerRef.current.addIceCandidate(new RTCIceCandidate(i));
-        //  console.log("acceptCall: flushed ICE OK");
+        
       }
       catch(e){
-        //  console.error("acceptCall flush error:", e);
+         console.error( e);
       }
     }
     iceCandidateBuffer.current=[];
     const answer = await peer.createAnswer();
     await peer.setLocalDescription(answer);
-    // callerId here = the caller's _id, send answer back to them
+   
     socketRef.current.emit("answer-call", incomingCall.callerId, answer);
     setCallState("in-call");
     setIncomingCall(null);
   }
 
-  // ── REJECT CALL ───────────────────────────────────────────────────────────
+  // ── REJECT CALL ─────────
   function rejectCall() {
     socketRef.current.emit("reject-call", incomingCall.callerId);
     addToHistory({
@@ -383,7 +375,7 @@ const CallModal = () => {
     setCallState("idle");
   }
 
-  // ── END CALL ──────────────────────────────────────────────────────────────
+  // ── END CALL ───────
   function endCall() {
     const duration = callStartTimeRef.current
       ? Math.round((Date.now() - callStartTimeRef.current) / 1000)
@@ -399,7 +391,7 @@ const CallModal = () => {
     cleanupCall();
   }
 
-  // ── CLEANUP ───────────────────────────────────────────────────────────────
+  // ── CLEANUP ───
   function cleanupCall() {
     stopSpeakingDetection();
     clearCallTimeout();
@@ -426,7 +418,7 @@ const CallModal = () => {
     setIsRemoteUserMuted(false);
   }
 
-  // ── Media toggles ─────────────────────────────────────────────────────────
+  // ── Media toggles ────
   function toggleMute() {
     if (!localStreamRef.current) return;
     localStreamRef.current
@@ -446,13 +438,12 @@ const CallModal = () => {
     setIsVideoOff((p) => !p);
   }
 
-  // expose initiateCall so MessageContainer can call it via context
-  // we attach it to context via callModalRef in ChatContext
+
   useEffect(() => {
     startCallRef.current = initiateCall;
   }, []);
 
-  // don't render anything if idle and no incoming call
+  
   if (callState === "idle" && !incomingCall) return null;
 
   return (
@@ -542,7 +533,7 @@ const CallModal = () => {
                 remoteStreamRef={remoteStreamRef}
                 localStreamRef={localStreamRef}
                 IsRemoteUserMuted={IsRemoteUserMuted}
-                 remoteUser={otherUser}
+                
               />
             )}
           </div>
@@ -553,8 +544,4 @@ const CallModal = () => {
 };
 
 export default CallModal;
-// ─────────────────────────────────────────────────────────────────────────────
-// HOW TO USE initiateCall from MessageContainer:
-// In MessageContainer, call: startCall(true/false, otherUser._id)
-// startCall comes from chatContext
-// ─────────────────────────────────────────────────────────────────────────────
+
