@@ -19,7 +19,7 @@ const VideoOnlyCall = ({
   remoteStreamRef,
   localStreamRef,
   IsRemoteUserMuted,
-  remoteUser
+  
 }) => {
   
   const mobileLocalRef = useRef(null);
@@ -85,7 +85,7 @@ const VideoOnlyCall = ({
           <div className="absolute bottom-6 left-0 right-0 flex justify-center gap-3 px-4">
             <button
               onClick={toggleMute}
-              className={`px-5 py-2 rounded-full text-sm font-medium transition ${isMuted ? "bg-red-600 hover:bg-red-700" : "bg-gray-700 hover:bg-gray-600"}`}
+              className={`px-5 py-2 rounded-full text-sm font-medium transition ${isMuted ? "bg-red-600 hover:bg-red-700" : "bg-gray-600 hover:bg-gray-500"}`}
             >
               {isMuted ? (
                 <span className="flex justify-center items-center gap-1">
@@ -101,7 +101,7 @@ const VideoOnlyCall = ({
             {!isAudioOnly && (
               <button
                 onClick={toggleVideo}
-                className={`px-4 py-2 rounded-full text-sm font-medium transition ${isVideoOff ? "bg-red-600 hover:bg-red-700" : "bg-gray-700 hover:bg-gray-600"}`}
+                className={`px-4 py-2 rounded-full text-sm font-medium transition ${isVideoOff ? "bg-red-600 hover:bg-red-700" : "bg-gray-600 hover:bg-gray-500"}`}
               >
                 {isVideoOff ? <BsFillCameraVideoOffFill /> : <FaVideo />}
               </button>
@@ -192,7 +192,7 @@ const VideoOnlyCall = ({
                 className="flex items-center gap-1.5 text-sm px-4 py-1.5 rounded-full"
                 style={{ background: "#3a1a1a", color: "#f87171" }}
               >
-                <AiOutlineAudioMuted /> {remoteUser?.fullname?.firstname || "Remote"} is muted
+                <AiOutlineAudioMuted /> User is muted
               </span>
             </div>
           )}
