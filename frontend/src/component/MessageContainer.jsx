@@ -105,7 +105,7 @@ const MessageContainer = () => {
       <div className={`flex-1 flex-col bg-[url('/MsgBoxImage.jpg')] ${isGroupChatProfileOpen ? "hidden md:flex" : "flex"}`}>
         {/* Header */}
         <header className="w-full sticky top-0 z-10">
-          <div className="h-12 bg-[#1D1F1F] border-b shadow-2xl flex justify-between items-center">
+          <div className="h-12 bg-[#1D1F1F] border-gray-200 text-white shadow-2xl flex justify-between items-center">
             <div className="flex items-center pl-2">
               <MdOutlineKeyboardBackspace size={24} className="md:hidden mr-2 cursor-pointer" onClick={handleBackFeature} />
               <div className="w-8 rounded-[50%] ml-2 h-8 cursor-pointer"
@@ -117,9 +117,9 @@ const MessageContainer = () => {
             </div>
 
             {!selectedChat?.isGroupChat && (
-              <div className="relative mr-4">
+              <div className="relative mr-4 text-white">
                 <button onClick={(e) => { e.stopPropagation(); setIsCallPopupOpen((prev) => !prev); }}
-                  className="flex items-center gap-2 px-4 py-1.5 border border-gray-300 rounded-full hover:bg-gray-100 transition">
+                  className="flex items-center gap-2 px-4 py-1.5 border border-gray-300 rounded-full  transition">
                   <BsCameraVideo size={16} />
                   <span className="text-sm font-medium">Call</span>
                   <span className="text-xs">▼</span>
@@ -219,7 +219,7 @@ const MessageContainer = () => {
             <form className="relative flex items-center">
               <FaPlus size={20} className="absolute left-4 text-white cursor-pointer" />
               <input type="text" placeholder="Type a message"
-                className="py-3 pl-12 pr-12 bg-black text-white w-full mb-2 rounded-full placeholder:text-gray-400 outline-none"
+                className="py-3 pl-12 pr-12 bg-black text-white w-full mb-1 rounded-full placeholder:text-gray-400 outline-none"
                 value={MsgInputValue} onChange={handleMsgInput} onKeyDown={handleSendingMessageByEnterKey} />
               <IoSend size={20} className="absolute right-4 text-white cursor-pointer"
                 onClick={() => sendMessage(MsgInputValue, selectedChat._id)} />
