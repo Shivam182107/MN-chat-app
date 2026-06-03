@@ -3,8 +3,7 @@ const express = require("express");
 const app = express();
 const cors = require("cors");
 const connectDb = require('./db/db');
-const cookieParser = require("cookie-parser");
-const session = require("express-session");      
+const cookieParser = require("cookie-parser");      
 const passport=require("./src/config/passport")
 const userRouter = require('./src/routes/user.route');
 const chatrouter = require('./src/routes/chat.route');
@@ -22,15 +21,8 @@ app.use(cors({
 }));
 app.use(cookieParser());
 
-app.use(session({
-    secret: process.env.SECRET_KEY,
-    resave: false,
-    saveUninitialized: false,
-}));
-
-
 app.use(passport.initialize());
-app.use(passport.session());
+
 
 app.use("/user", userRouter);
 app.use("/chat", chatrouter);
@@ -39,7 +31,7 @@ app.use("/message", messageRouter);
 app.get("/", (req, res) => {
     res.send("<h1>Welcome Shivam this is Chat app</h1>");
 });
-console.log("CLIENT ID:", process.env.GOOGLE_CLIENT_ID);
-console.log("CLIENT SECRET:", process.env.GOOGLE_CLIENT_SECRET);
+// console.log("CLIENT ID:", process.env.GOOGLE_CLIENT_ID);
+// console.log("CLIENT SECRET:", process.env.GOOGLE_CLIENT_SECRET);
 
 module.exports = app;

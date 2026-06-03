@@ -1,7 +1,7 @@
 const passport = require("passport");
 const GoogleStrategy = require("passport-google-oauth20").Strategy;
 const user = require("../models/user.model");
-const refreshTokenModel = require("../models/refreshToken.model");
+
 
 passport.use(
     new GoogleStrategy(
@@ -12,19 +12,18 @@ passport.use(
         },
         async (accessToken, refreshToken, profile, done) => {
             try {
-                // Check if user already exists with this googleId
+                // Check if user already exists with this googleId (login )
                 let existingUser = await user.findOne({ googleId: profile.id });
                 if (existingUser) {
                     return done(null, existingUser);
                 }
 
-                // Check if user exists with same email (registered normally before)
+                // Check if user exists with same email (Link the google account(google id ))
                 let emailUser = await user.findOne({ email: profile.emails[0].value });
                 if (emailUser) {
                     // Link google to existing account
                     emailUser.googleId = profile.id;
                     emailUser.authProvider = "google";
-                    if (profile.photos?.[0]?.value) emailUser.pic = profile.photos[0].value;
                     await emailUser.save();
                     return done(null, emailUser);
                 }
@@ -36,7 +35,6 @@ passport.use(
                         lastname: profile.name.familyName || "",
                     },
                     email: profile.emails[0].value,
-                    pic: profile.photos?.[0]?.value || undefined,
                     googleId: profile.id,
                     authProvider: "google",
                 });
@@ -49,11 +47,6 @@ passport.use(
     )
 );
 
-// Not using sessions — just need these as stubs for passport to work
-passport.serializeUser((user, done) => done(null, user._id));
-passport.deserializeUser(async (id, done) => {
-    const foundUser = await user.findById(id);
-    done(null, foundUser);
-});
+
 
 module.exports = passport;
