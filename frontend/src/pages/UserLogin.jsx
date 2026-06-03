@@ -1,4 +1,4 @@
-import { Link, useNavigate } from "react-router";
+import { Link, useNavigate, useSearchParams } from "react-router";
 import { FaArrowRightLong } from "react-icons/fa6";
 import { FaGoogle } from "react-icons/fa";
 import { useForm } from "react-hook-form";
@@ -8,6 +8,7 @@ import { useContext } from "react";
 import { authContext } from "../context/AuthContext";
 import { chatContext } from "../context/ChatContext";
 import toast from "react-hot-toast";
+import { useEffect } from "react";
 
 const UserLogin = () => {
   const navigate = useNavigate();
@@ -19,6 +20,7 @@ const UserLogin = () => {
   } = useForm();
   const { setUser } = useContext(authContext);
   const { setfetchChatAgain } = useContext(chatContext);
+  const [searchParams]=useSearchParams();
 
   async function FormSubmit(formdata) {
     if (!formdata) return;
@@ -44,7 +46,13 @@ const UserLogin = () => {
 
     window.location.href = `${import.meta.env.VITE_BASE_URL}/user/auth/google`;
   }
-
+  useEffect(()=>{
+    let error=searchParams.get("error");
+     if(error==="google_failed"){
+      toast.error("Google verification failed. Please try again.")
+      
+    }
+  },[])
   return (
     <>
       <motion.div

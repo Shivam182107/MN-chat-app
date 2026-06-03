@@ -5,7 +5,7 @@ const refreshTokenModel = require("../models/refreshToken.model");
 const jwt = require("jsonwebtoken");
 
 // ── helper: set cookies + return user ────────────────────────────────────────
-async function loginUser(res, User) {
+async function setTokenAndGetUserDetails(res, User) {
     const { refreshToken, accessToken } = User.generateAuthToken();
     const tokenDoc = new refreshTokenModel({ token: refreshToken, userid: User._id });
     await tokenDoc.save();
@@ -36,7 +36,7 @@ module.exports.registerUser = async (req, res) => {
         const hashedPassword = await user.hashPassword(password);
         const NewUser = await user.create({ fullname: { firstname, lastname }, email, password: hashedPassword });
 
-        const userDetails = await loginUser(res, NewUser);
+        const userDetails = await setTokenAndGetUserDetails(res, NewUser);
         res.status(201).json(userDetails);
     } catch (e) {
         console.log(e.message);
@@ -62,7 +62,7 @@ module.exports.userLogin = async (req, res) => {
         const isMatch = await User.comparePassword(password);
         if (!isMatch) return res.status(401).json({ message: "Invalid email or password" });
 
-        const userDetails = await loginUser(res, User);
+        const userDetails = await setTokenAndGetUserDetails(res, User);
         res.status(200).json(userDetails);
     } catch (e) {
         console.log(e.message);
@@ -74,7 +74,7 @@ module.exports.userLogin = async (req, res) => {
 // Called by passport after Google verifies the user
 module.exports.googleAuthCallback = async (req, res) => {
     try {
-        const User = req.user; // passport puts the user here
+        const User = req.user; 
         const { refreshToken, accessToken } = User.generateAuthToken();
 
         const tokenDoc = new refreshTokenModel({ token: refreshToken, userid: User._id });
@@ -90,10 +90,10 @@ module.exports.googleAuthCallback = async (req, res) => {
         });
 
         // Redirect to frontend — frontend will call /user/profile to get user data
-        res.redirect("http://localhost:5173/auth/google/success");
+        res.redirect(`${process.env.FRONTEND_URL}/auth/google/success`);
     } catch (e) {
         console.log(e.message);
-        res.redirect("http://localhost:5173/user/login?error=google_failed");
+        res.redirect(`${process.env.FRONTEND_URL}/user/login?error=google_failed`);
     }
 };
 

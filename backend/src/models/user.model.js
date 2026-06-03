@@ -34,7 +34,7 @@ const userSchema = new Schema({
     pic: {
         type: "String",
         default:
-            'https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcRE7C0855CpcwZfDmcJu6PJXD9Z79AWusBc7wnBIzz3LA&s',
+            "https://www.shutterstock.com/image-vector/user-profile-icon-set-single-260nw-2720159593.jpg",
     },
     isAdmin: {
         type: Boolean,
