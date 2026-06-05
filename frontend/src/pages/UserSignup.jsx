@@ -34,7 +34,7 @@ const UserSignup = () => {
   }
 
   function handleGoogleLogin() {
-    window.location.href = "http://localhost:3000/user/auth/google";
+    window.location.href = `${import.meta.env.VITE_BASE_URL}/user/auth/google`;
   }
 
   return (
