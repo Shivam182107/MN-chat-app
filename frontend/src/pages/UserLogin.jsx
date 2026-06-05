@@ -43,7 +43,6 @@ const UserLogin = () => {
 
   function handleGoogleLogin() {
     // Redirect browser to backend Google OAuth route
-
     window.location.href = `${import.meta.env.VITE_BASE_URL}/user/auth/google`;
   }
   useEffect(()=>{
