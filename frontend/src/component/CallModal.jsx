@@ -4,6 +4,7 @@ import { authContext } from "../context/AuthContext";
 import IncomingCallModal from "./IncomingCallModal";
 import AudioOnlyCall from "./AudioOnlyCall";
 import VideoOnlyCall from "./VideoOnlyCall";
+import api from "../api/axiosInterceptor";
 
 const ICE_SERVERS = {
   iceServers: [
@@ -42,8 +43,6 @@ const CallModal = () => {
     setCallState,
     incomingCall,
     setIncomingCall,
-    callHistory,
-    setCallHistory,
     startCallRef,
   } = useContext(chatContext);
 
@@ -55,7 +54,6 @@ const CallModal = () => {
   const remoteIdRef = useRef("");
   const callStartTimeRef = useRef(null);
   const remoteStreamRef = useRef(null);
- 
 
   // ────── UI state ────────────
   const [isMuted, setIsMuted] = useState(false);
@@ -65,7 +63,7 @@ const CallModal = () => {
   const [timeoutCountdown, setTimeoutCountdown] = useState(0);
   const remoteAudioRef = useRef();
   const iceCandidateBuffer = useRef([]);
-  const [IsRemoteUserMuted,setIsRemoteUserMuted]=useState(false);
+  const [IsRemoteUserMuted, setIsRemoteUserMuted] = useState(false);
 
   // ──────────── Refs for cleanup ─────────
   const animFrameRef = useRef(null);
@@ -98,8 +96,13 @@ const CallModal = () => {
   }
 
   // ──────── History helper ────
-  function addToHistory(entry) {
-    setCallHistory((prev) => [{ id: Date.now(), ...entry }, ...prev]);
+  async function addToHistory(entry) {
+    try {
+       await api.post("/history", entry);
+    } catch (error) {
+       console.log("Failed to save call history:", error);
+      // console.log(error)
+    }
   }
 
   // ─ Timeout ──────────────────
@@ -135,25 +138,25 @@ const CallModal = () => {
       setCallState("idle");
     });
 
-    // our call got answered
+    // our call got answered means call connected
     socketRef.current.on("call-answered", async ({ answer }) => {
       if (!peerRef.current) return;
       clearCallTimeout();
       callStartTimeRef.current = Date.now();
-      
+
       try {
         await peerRef.current.setRemoteDescription(
           new RTCSessionDescription(answer),
         );
-        
-        for(let i of iceCandidateBuffer.current){
-          try{
-            await peerRef.current.addIceCandidate(new RTCIceCandidate(i))
 
-            }
-             catch (e) { console.error("flush error:", e); }
+        for (let i of iceCandidateBuffer.current) {
+          try {
+            await peerRef.current.addIceCandidate(new RTCIceCandidate(i));
+          } catch (e) {
+            console.error("flush error:", e);
+          }
         }
-        iceCandidateBuffer.current=[];
+        iceCandidateBuffer.current = [];
         setCallState("in-call");
       } catch (e) {
         console.log("call-answered error:", e);
@@ -163,48 +166,50 @@ const CallModal = () => {
     // ICE candidate
     socketRef.current.on("ice-candidate", async (candidate) => {
       if (!peerRef.current || !peerRef.current.remoteDescription) {
-       
         iceCandidateBuffer.current.push(candidate);
         return;
       }
       try {
         await peerRef.current.addIceCandidate(new RTCIceCandidate(candidate));
-        
       } catch (e) {
         console.error("ICE error:", e);
       }
     });
 
-    // remote ended call
+    // remote ended call call receiverid
     socketRef.current.on("call-ended", () => {
       const duration = callStartTimeRef.current
         ? Math.round((Date.now() - callStartTimeRef.current) / 1000)
         : null;
       addToHistory({
-        type: "incoming",
+        callerid: remoteIdRef.current,
+        receiverid: User._id,
+        Type: "incoming",
         status: "answered",
-        remoteId: remoteIdRef.current,
-        timestamp: new Date().toISOString(),
+        callType: isAudioOnly ? "audio" : "video",
+        withVideo: isAudioOnly,
         duration,
       });
       cleanupCall();
     });
 
-    // remote rejected
+    // remote rejected caller side
     socketRef.current.on("call-rejected", () => {
       clearCallTimeout();
       addToHistory({
-        type: "outgoing",
+        callerid: User._id,
+        receiverid: remoteIdRef.current,
+        Type: "outgoing",
         status: "rejected",
-        remoteId: remoteIdRef.current,
-        timestamp: new Date().toISOString(),
+        callType: isAudioOnly ? "audio" : "video",
+        withVideo: isAudioOnly,
         duration: null,
       });
       cleanupCall();
     });
-    socketRef.current.on("remote-user-muted",(isMute)=>{
-      setIsRemoteUserMuted(isMute)
-    })
+    socketRef.current.on("remote-user-muted", (isMute) => {
+      setIsRemoteUserMuted(isMute);
+    });
 
     return () => {
       socketRef.current.off("call-cancelled");
@@ -225,28 +230,26 @@ const CallModal = () => {
         audio: true,
       });
       localStreamRef.current = stream;
-      
+
       if (!withVideo) startSpeakingDetection(stream);
       return stream;
     } catch (e) {
-    
       alert("Media error: " + e.message);
       return null;
     }
   }
 
-  
   useEffect(() => {
     if (localVideoRef.current && localStreamRef.current) {
       localVideoRef.current.srcObject = localStreamRef.current;
     }
-  }, [callState]); 
+  }, [callState]);
 
   // ── Create peer connection ─────────────
   function createPeerConnection(remoteId) {
     const peer = new RTCPeerConnection(ICE_SERVERS);
     peer.onicecandidate = (e) => {
-      if (e.candidate) { 
+      if (e.candidate) {
         socketRef.current.emit("ice-candidate", remoteId, e.candidate);
       }
     };
@@ -270,28 +273,23 @@ const CallModal = () => {
         peer.connectionState === "disconnected" ||
         peer.connectionState === "failed"
       ) {
-       
         cleanupCall();
       }
     };
     return peer;
   }
 
-
   useEffect(() => {
     if (callState === "in-call" && remoteStreamRef.current) {
-      
       if (remoteVideoRef.current) {
         remoteVideoRef.current.srcObject = remoteStreamRef.current;
-        
-      } 
+      }
       if (remoteAudioRef.current) {
         remoteAudioRef.current.srcObject = remoteStreamRef.current;
-        
-      } 
+      }
     }
   }, [callState]);
- 
+
   async function initiateCall(withVideo, receiverId, callerData) {
     const stream = await getLocalStream(withVideo);
     if (!stream) return;
@@ -302,7 +300,7 @@ const CallModal = () => {
     peerRef.current = peer;
     const offer = await peer.createOffer();
     await peer.setLocalDescription(offer);
-   
+
     socketRef.current.emit(
       "call-user",
       receiverId,
@@ -319,10 +317,12 @@ const CallModal = () => {
     clearCallTimeout();
     socketRef.current.emit("call-cancelled", receiverId, User._id);
     addToHistory({
-      type: "outgoing",
+      callerid: User._id,
+      receiverid: receiverId,
+      Type: "outgoing",
       status: timedOut ? "no-answer" : "cancelled",
-      remoteId: receiverId,
-      timestamp: new Date().toISOString(),
+      callType: isAudioOnly ? "audio" : "video",
+      withVideo: isAudioOnly,
       duration: null,
     });
     cleanupCall();
@@ -342,49 +342,51 @@ const CallModal = () => {
     await peer.setRemoteDescription(
       new RTCSessionDescription(incomingCall.offer),
     );
-      
-    for(let i of iceCandidateBuffer.current){
-      try{
+
+    for (let i of iceCandidateBuffer.current) {
+      try {
         await peerRef.current.addIceCandidate(new RTCIceCandidate(i));
-        
-      }
-      catch(e){
-         console.error( e);
+      } catch (e) {
+        console.error(e);
       }
     }
-    iceCandidateBuffer.current=[];
+    iceCandidateBuffer.current = [];
     const answer = await peer.createAnswer();
     await peer.setLocalDescription(answer);
-   
+
     socketRef.current.emit("answer-call", incomingCall.callerId, answer);
     setCallState("in-call");
     setIncomingCall(null);
   }
 
-  // ── REJECT CALL ─────────
+  // ── REJECT CALL ─────────  call receiver reject call
   function rejectCall() {
     socketRef.current.emit("reject-call", incomingCall.callerId);
     addToHistory({
-      type: "incoming",
+      callerid: incomingCall.callerId,
+      receiverid: User._id,
+      Type: "incoming",
       status: "rejected",
-      remoteId: incomingCall.callerId,
-      timestamp: new Date().toISOString(),
+      callType: incomingCall.withVideo ? "video" : "audio",
+      withVideo: incomingCall.withVideo,
       duration: null,
     });
     setIncomingCall(null);
     setCallState("idle");
   }
 
-  // ── END CALL ───────
+  // ── END CALL ─────── caller side
   function endCall() {
     const duration = callStartTimeRef.current
       ? Math.round((Date.now() - callStartTimeRef.current) / 1000)
       : null;
     addToHistory({
-      type: "outgoing",
+      callerid: User._id,
+      receiverId: remoteIdRef.current,
+      Type: "outgoing",
       status: "answered",
-      remoteId: remoteIdRef.current,
-      timestamp: new Date().toISOString(),
+      callType: isAudioOnly ? "audio" : "video",
+      withVideo: isAudioOnly,
       duration,
     });
     socketRef.current.emit("end-call", remoteIdRef.current);
@@ -408,7 +410,7 @@ const CallModal = () => {
     if (remoteAudioRef.current) remoteAudioRef.current.srcObject = null;
     remoteStreamRef.current = null;
     callStartTimeRef.current = null;
-    iceCandidateBuffer.current=[]
+    iceCandidateBuffer.current = [];
     remoteIdRef.current = "";
     setCallState("idle");
     setIncomingCall(null);
@@ -425,8 +427,8 @@ const CallModal = () => {
       .getAudioTracks()
       .forEach((t) => (t.enabled = !t.enabled));
     setIsMuted((p) => {
-      socketRef.current.emit("remote-mute",!p,remoteIdRef.current)
-      return !p
+      socketRef.current.emit("remote-mute", !p, remoteIdRef.current);
+      return !p;
     });
   }
 
@@ -438,12 +440,10 @@ const CallModal = () => {
     setIsVideoOff((p) => !p);
   }
 
-
   useEffect(() => {
     startCallRef.current = initiateCall;
   }, []);
 
-  
   if (callState === "idle" && !incomingCall) return null;
 
   return (
@@ -515,7 +515,6 @@ const CallModal = () => {
                 localUser={User}
                 remoteUser={otherUser}
                 toggleMute={toggleMute}
-                
                 endCall={endCall}
                 remoteAudioRef={remoteAudioRef}
               />
@@ -533,7 +532,6 @@ const CallModal = () => {
                 remoteStreamRef={remoteStreamRef}
                 localStreamRef={localStreamRef}
                 IsRemoteUserMuted={IsRemoteUserMuted}
-                
               />
             )}
           </div>
@@ -544,4 +542,3 @@ const CallModal = () => {
 };
 
 export default CallModal;
-

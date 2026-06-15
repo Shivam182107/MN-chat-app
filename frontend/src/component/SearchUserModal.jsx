@@ -81,8 +81,8 @@ const SearchUserModal = ({ SearchValue,handleInput }) => {
                     <div
                         key={idx}
                         className="p-3 flex items-center gap-3 hover:bg-white/10 cursor-pointer text-white transition-colors duration-200"
-                        onClick={() =>{
-                            SearchUserChat(val._id,setselectedChat)
+                        onClick={async () =>{
+                            await SearchUserChat(val._id,setselectedChat)
                             // console.log("1to1 chat created ")
                             setfetchChatAgain(true);
                             setSearchData(null);
