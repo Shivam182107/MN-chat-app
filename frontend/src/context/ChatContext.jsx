@@ -64,7 +64,7 @@ const ChatContext = ({ children }) => {
   // ── message received listener ──────────
   useEffect(() => {
     if (!isScoketConnected || !socketRef.current) return;
-    const handleMessageRecieve = function (message) {
+    const handleMessageRecieve = async function (message) {
       if (!currentChatRef.current || currentChatRef.current?._id != message.chat._id) {
         setNotification((prev) => !prev.some((val) => val._id === message._id) ? [message, ...prev] : prev);
         setfetchChatAgain(true);
@@ -104,6 +104,30 @@ const ChatContext = ({ children }) => {
       socketRef.current.off("missed-calls", handleMissedCalls);
     };
   }, [isScoketConnected]);
+
+async function getNotificationAndHistory(){
+   if(!User)return;
+    try {
+
+      const [notification,History]=await Promise.allSettled([
+        api.get("/notification"),
+        api.get("/history")
+      ])
+      if(notification.status==="fulfilled"){
+        setNotification(notification.value.data.notification.map(val=>val.messageid))
+      }
+      if(History.status==="fulfilled"){
+        setCallHistory(History.value.data.history)
+      }
+
+
+    } catch (error) {
+      console.log("Failed to fetch on mount:", error);
+    }
+}
+  useEffect(()=>{
+   getNotificationAndHistory()
+  },[User])
 
   return (
     <chatContext.Provider

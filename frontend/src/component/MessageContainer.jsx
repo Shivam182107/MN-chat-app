@@ -18,6 +18,8 @@ const MessageContainer = () => {
     UserMessages, setUserMessages,
     Notification, isGroupChatProfileOpen,
     startCall, 
+    setfetchChatAgain,
+    chatDetails
   } = useContext(chatContext);
   const { User, socketRef, isScoketConnected } = useContext(authContext);
 
@@ -57,6 +59,7 @@ const MessageContainer = () => {
     if (e.key === "Enter") {
       e.preventDefault();
       sendMessage(MsgInputValue, selectedChat._id);
+      
     }
   }
 
@@ -69,6 +72,9 @@ const MessageContainer = () => {
         socketRef.current.emit("send message", messageResponse.data);
         setUserMessages((prev) => [...prev, messageResponse.data]);
         setMsgInputValue("");
+        if(chatDetails[0]._id!=selectedChat._id){
+          setfetchChatAgain(true);
+        }
       }
     } catch (e) { console.log(e.message); }
   }

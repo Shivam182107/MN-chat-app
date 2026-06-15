@@ -8,6 +8,8 @@ const passport=require("./src/config/passport")
 const userRouter = require('./src/routes/user.route');
 const chatrouter = require('./src/routes/chat.route');
 const messageRouter = require('./src/routes/message.route');
+const notificationRouter = require('./src/routes/notification.route');
+const callHistoryRouter = require('./src/routes/callhistory.route');
 
 connectDb()
     .then(() => console.log("Successfully connected with database"))
@@ -27,6 +29,8 @@ app.use(passport.initialize());
 app.use("/user", userRouter);
 app.use("/chat", chatrouter);
 app.use("/message", messageRouter);
+app.use("/notification", notificationRouter);
+app.use("/history", callHistoryRouter);
 
 app.get("/", (req, res) => {
     res.send("<h1>Welcome Shivam this is Chat app</h1>");

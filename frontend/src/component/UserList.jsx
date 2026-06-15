@@ -14,6 +14,7 @@ const UserList = ({ isGroupsOpen }) => {
     setfetchChatAgain,
     Notification,
     setNotification,
+    callHistory,
   } = useContext(chatContext);
   const { User } = useContext(authContext);
 
@@ -22,7 +23,7 @@ const UserList = ({ isGroupsOpen }) => {
       // if (chatDetails) return;
       if (!chatDetails || fetchChatAgain) {
         const { data } = await api.get("/chat");
-        console.log("Fetching userlist ");
+        // console.log("Fetching userlist ");
         // console.log(data);
         setchatDetails(data);
         setfetchChatAgain(false);
@@ -40,7 +41,15 @@ const UserList = ({ isGroupsOpen }) => {
     if (Notification.length === 0) return;
     if (Notification.length > 0) {
       setchatDetails((prev) => {
-        const notificationChats = Notification.map((val) => ({
+        const uniqueNotifications = new Set();
+        const latestAndUniqueMsg = Notification.filter((val) => {
+          if (uniqueNotifications.has(val.chat._id)) return false;
+          uniqueNotifications.add(val.chat._id);
+          return true;
+        });
+       
+        //convert into chat
+        const notificationChats = latestAndUniqueMsg.map((val) => ({
           ...val.chat,
           latestMessage: {
             _id: val._id,
@@ -56,7 +65,8 @@ const UserList = ({ isGroupsOpen }) => {
             !notificationChats.some((notifChat) => notifChat._id === chat._id),
         );
 
-        // notifications first, then remaining chats
+        // notifications first, then remaining chats amd mergerd here
+       
         return [...notificationChats, ...filteredChats];
       });
     }
@@ -92,6 +102,21 @@ const UserList = ({ isGroupsOpen }) => {
     );
   }
   //  console.log("userlist rendering ......")
+  // console.log( "in the usrelist",chatDetails)
+
+  async function handleDeleteNotification(chatid) {
+    try {
+      const response = await api.delete(`/notification/${chatid}`);
+    if (response.status === 200) {
+      setNotification((prev) => {
+        return prev.filter((item) => item.chat._id != chatid);
+      });
+    }
+    } catch (error) {
+      console.log("Notification deletion failed :",error);
+    }
+    
+  }
   return (
     <>
       <div className="flex-1 overflow-y-auto space-y-2 pr-2 custom-scrollbar  pb-28 pl-2 w-full ">
@@ -112,9 +137,7 @@ const UserList = ({ isGroupsOpen }) => {
                 onClick={() => {
                   if (Notification.length > 0) {
                     if (isHavingNotification) {
-                      setNotification((prev) => {
-                        return prev.filter((item) => item.chat._id != val._id);
-                      });
+                     handleDeleteNotification(val._id)
                     }
                   }
                   //make or get chat  function

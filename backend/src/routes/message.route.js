@@ -5,5 +5,6 @@ const messageRouter=express.Router();
 
 messageRouter.post("/",checkUserAuth,messageController.sendMessage);
 messageRouter.get("/:chatId",checkUserAuth,messageController.allMessages);
+messageRouter.patch("/:chatId",checkUserAuth,messageController.setReadBy);
 
 module.exports=messageRouter
