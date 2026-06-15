@@ -3,6 +3,8 @@ import { authContext } from "../context/AuthContext"
 import api from "../api/axiosInterceptor";
 import { useNavigate } from "react-router"
 import { chatContext } from "../context/ChatContext";
+import Skeleton from "./Skeleton";
+
 
 const UserProtectedWrapper = ({ children }) => {
   const { User, setUser } = useContext(authContext);
@@ -39,7 +41,8 @@ const UserProtectedWrapper = ({ children }) => {
   }, [])
   if (isLoading) {
   return (
-    <div className="inset-0 fixed flex flex-col justify-center items-center text-5xl">Loading........</div>
+    // <div className="inset-0 fixed flex flex-col justify-center items-center text-5xl">Loading........</div>
+    <Skeleton/>
   );
 }
   return (

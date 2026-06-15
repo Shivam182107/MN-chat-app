@@ -82,3 +82,32 @@
 .typing-loader span:nth-child(3) {
   animation-delay: 0.5s;
 }
+.skeleton {
+  position: relative;
+  overflow: hidden;
+  background: #252727;
+}
+
+.skeleton::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+
+  background: linear-gradient(
+    90deg,
+    transparent 0%,
+    rgba(255, 255, 255, 0.04) 25%,
+    rgba(255, 255, 255, 0.18) 50%,
+    rgba(255, 255, 255, 0.04) 75%,
+    transparent 100%
+  );
+
+  transform: translateX(-100%);
+  animation: shimmer 1.8s linear infinite;
+}
+
+@keyframes shimmer {
+  100% {
+    transform: translateX(100%);
+  }
+}
