@@ -127,7 +127,9 @@ const ChatContext = ({ children }) => {
       if (notification.status === 200) {
         setNotification(
           notification.value.data.notification.map((val) => val.messageid),
+
         );
+        setfetchCallHistoryAgain(true);
       }
     } catch (error) {
       console.log("Failed to fetch on mount:", error);
