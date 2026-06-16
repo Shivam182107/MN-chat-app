@@ -19,13 +19,15 @@ import SearchUserModal from "../component/SearchUserModal";
 import GroupChatProfile from "../component/GroupChatProfile";
 import { authContext } from "../context/AuthContext";
 import { io } from "socket.io-client";
-import CallModal from "../component/CallModal"; 
+import CallModal from "../component/CallModal";
+import CallHistory from "../component/CallHistory";
 
 const Home = () => {
   const [isPopupOpen, setisPopupOpen] = useState(false);
   const searchRef = useRef(null);
   const [GroupCreation, setGroupCreation] = useState(false);
   const [isProfileActive, setisProfileActive] = useState(false);
+  const [isCallHistoryOpen, setisCallHistoryOpen] = useState(false);
   const {
     selectedChat,
     selectedGroupMember,
@@ -38,21 +40,29 @@ const Home = () => {
   const [isOpenSearchUserModal, setisOpenSearchUserModal] = useState(false);
   const [searchInputValue, setsearchInputValue] = useState("");
   const [isGroupsOpen, setisGroupsOpen] = useState(false);
-  const { User, isScoketConnected, setisScoketConnected, socketRef } = useContext(authContext);
+  const { User, isScoketConnected, setisScoketConnected, socketRef } =
+    useContext(authContext);
 
   const navigate = useNavigate();
 
-  function removeGroupCreate() { setGroupCreation((prev) => !prev); }
-  function profileActivate() { setisProfileActive((prev) => !prev); }
+  function removeGroupCreate() {
+    setGroupCreation((prev) => !prev);
+  }
+  function profileActivate() {
+    setisProfileActive((prev) => !prev);
+  }
 
   function handleSearch() {
     if (!searchRef.current.value || searchRef.current.value.trim() == "") {
-      setsearchInputValue(""); return;
+      setsearchInputValue("");
+      return;
     }
     setsearchInputValue(searchRef.current.value);
     setisOpenSearchUserModal(true);
   }
-  function handleInput() { setsearchInputValue(""); }
+  function handleInput() {
+    setsearchInputValue("");
+  }
 
   useEffect(() => {
     if (!User) return;
@@ -62,7 +72,7 @@ const Home = () => {
       socketRef.current.emit("setup", User);
     });
   }, [User]);
-
+  
   return (
     <>
       <div className="h-[100dvh] flex flex-col bg-[#F7F5F3]">
@@ -70,33 +80,54 @@ const Home = () => {
 
         <div className="flex flex-1 overflow-hidden relative">
           {/* Sidebar */}
-          <div className={`md:w-16 md:h-full bg-[#1D1F1F] text-white flex md:flex-col items-center md:relative py-4 absolute bottom-0 w-full h-24 justify-evenly ${selectedChat ? "hidden md:flex " : "flex"}`}>
+          <div
+            className={`md:w-16 md:h-full bg-[#1D1F1F] text-white flex md:flex-col items-center md:relative py-4 absolute bottom-0 w-full h-24 justify-evenly ${selectedChat ? "hidden md:flex " : "flex"}`}
+          >
             <div className="relative ">
               {Notification.length > 0 && (
                 <span className="absolute -top-3 -right-3 bg-[#58B960] text-grenn-900 text-xs px-1.5 py-0.5 rounded-full">
                   {Notification.length}
                 </span>
               )}
-              <BsChatSquareTextFill size={25} className="cursor-pointer"
+              <BsChatSquareTextFill
+                size={25}
+                className="cursor-pointer"
                 onClick={() => {
                   if (isGroupsOpen) setisGroupsOpen(false);
                   if (GroupCreation) setGroupCreation(false);
                   if (isProfileActive) setisProfileActive(false);
+                  if (isCallHistoryOpen) setisCallHistoryOpen(false);
                   if (selectedGroupMember.length > 0) {
                     setselectedGroupMember([]);
                     if (GroupName) setGroupName(null);
                   }
                   navigate("/");
-                }} />
+                }}
+              />
             </div>
-            <MdGroup size={25} className="cursor-pointer" onClick={() => setisGroupsOpen(true)} />
-            <MdOutlineGroupAdd size={25} onClick={() => setGroupCreation((prev) => !prev)} className="hover:cursor-pointer" />
-            <MdCall size={25} />
-            <BsCameraVideo size={25} />
+            <MdGroup
+              size={25}
+              className="cursor-pointer"
+              onClick={() => setisGroupsOpen(true)}
+            />
+            <MdOutlineGroupAdd
+              size={25}
+              onClick={() => setGroupCreation((prev) => !prev)}
+              className="hover:cursor-pointer"
+            />
+            <MdCall
+              size={25}
+              onClick={() => {
+                setisCallHistoryOpen((prev) => !prev);
+              }}
+              className="hover:cursor-pointer"
+            />
           </div>
 
           {/* Chat List */}
-          {isProfileActive ? (
+          {isCallHistoryOpen ? (
+            <CallHistory />
+          ) : isProfileActive ? (
             <Profile />
           ) : GroupCreation ? (
             <CreateGroup removeGroupCreate={removeGroupCreate} />
@@ -105,30 +136,63 @@ const Home = () => {
               {isGroupChatProfileOpen ? (
                 <GroupChatProfile />
               ) : (
-                <div className={`md:w-[410px] flex-shrink-0 w-full bg-[#161717] text-white border-r border-black flex flex-col ${selectedChat ? "hidden md:flex " : "flex"}`}>
+                <div
+                  className={`md:w-[410px] flex-shrink-0 w-full bg-[#161717] text-white border-r border-black flex flex-col ${selectedChat ? "hidden md:flex " : "flex"}`}
+                >
                   <div className="flex justify-between items-center py-4 px-4 relative">
                     <h1 className="text-3xl font-medium">Chats</h1>
                     <span className="flex items-center gap-3 text-xl">
-                      <RiChatNewFill onClick={() => searchRef.current.focus()} className="hover:cursor-pointer" />
-                      <BsThreeDotsVertical onClick={() => setisPopupOpen((prev) => !prev)} className="hover:cursor-pointer relative" />
+                      <RiChatNewFill
+                        onClick={() => searchRef.current.focus()}
+                        className="hover:cursor-pointer"
+                      />
+                      <BsThreeDotsVertical
+                        onClick={() => setisPopupOpen((prev) => !prev)}
+                        className="hover:cursor-pointer relative"
+                      />
                       {isPopupOpen && (
                         <div className="absolute right-[9%] top-4 mt-4 z-50">
                           <div className="backdrop-blur-xl bg-black/90 text-white rounded-xl shadow-2xl py-2 w-52 border border-white/10 ring-1 ring-white/5">
-                            <Link to="" className="block px-4 py-2 text-base hover:bg-white/10 transition">Read Messages</Link>
-                            <Link to="" className="block px-4 py-2 text-base hover:bg-white/10 transition">Unread Messages</Link>
-                            <Link to="" className="block px-4 py-2 text-base hover:bg-white/10 transition">Star Messages</Link>
+                            <Link
+                              to=""
+                              className="block px-4 py-2 text-base hover:bg-white/10 transition"
+                            >
+                              Read Messages
+                            </Link>
+                            <Link
+                              to=""
+                              className="block px-4 py-2 text-base hover:bg-white/10 transition"
+                            >
+                              Unread Messages
+                            </Link>
+                            <Link
+                              to=""
+                              className="block px-4 py-2 text-base hover:bg-white/10 transition"
+                            >
+                              Star Messages
+                            </Link>
                           </div>
                         </div>
                       )}
                     </span>
                   </div>
                   <div className="mb-4 relative px-4 relative ">
-                    <input type="text" name="Search"
+                    <input
+                      type="text"
+                      name="Search"
                       className="bg-[#2E2F2F] w-full py-2 rounded-full pl-10 placeholder:text-[#9FACAC] focus:outline-none focus:ring-2 focus:ring-[#5CC064]"
                       placeholder="Search or start a new chat"
-                      ref={searchRef} onChange={handleSearch} value={searchInputValue} />
+                      ref={searchRef}
+                      onChange={handleSearch}
+                      value={searchInputValue}
+                    />
                     <FaSearch className="absolute left-8 top-1/2 -translate-y-1/2 text-gray-500 " />
-                    {isOpenSearchUserModal && <SearchUserModal SearchValue={searchInputValue} handleInput={handleInput} />}
+                    {isOpenSearchUserModal && (
+                      <SearchUserModal
+                        SearchValue={searchInputValue}
+                        handleInput={handleInput}
+                      />
+                    )}
                   </div>
                   <UserList isGroupsOpen={isGroupsOpen} />
                 </div>
@@ -140,8 +204,10 @@ const Home = () => {
                 <div className="hidden md:flex flex-1 bg-gray-100 items-center justify-center">
                   <motion.h1
                     className="text-3xl lg:text-5xl font-medium text-center px-4"
-                    initial={{ opacity: 0, y: 60 }} animate={{ opacity: 1, y: 0 }}
-                    transition={{ duration: 0.8, ease: "easeOut" }}>
+                    initial={{ opacity: 0, y: 60 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    transition={{ duration: 0.8, ease: "easeOut" }}
+                  >
                     Welcome buddy once again
                   </motion.h1>
                 </div>
@@ -150,8 +216,8 @@ const Home = () => {
           )}
         </div>
       </div>
-      
-       <CallModal />
+
+      <CallModal />
     </>
   );
 };
