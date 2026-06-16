@@ -2,6 +2,8 @@ import React, { useContext } from "react";
 import ChatWindow from "./ChatWindow";
 import { BiSolidPhoneIncoming, BiSolidPhoneOutgoing } from "react-icons/bi";
 import { chatContext } from "../context/ChatContext";
+import { useEffect } from "react";
+
 
 
 
@@ -49,7 +51,27 @@ function formatDateLabel(dateString) {
 }
 
 const CallHistory = () => {
-  const { callHistory } = useContext(chatContext);
+  const { callHistory,setCallHistory,fetchCallHistoryAgain,setfetchCallHistoryAgain } = useContext(chatContext);
+
+  async function getCallHistory(){
+   
+    try {
+
+      const History=await api.get("/history")
+      if(History.status===200){
+        setCallHistory(History.value.data.history)
+      }
+      setfetchCallHistoryAgain(false);
+     
+    } catch (error) {
+      console.log("Failed to fetch on mount:", error);
+    }
+}
+  useEffect(()=>{
+  if(!fetchCallHistoryAgain)return;
+   getCallHistory()
+  },[fetchCallHistoryAgain])
+
   return (
     <>
       <div className="md:w-[410px] flex-shrink-0 w-full bg-[#161717] text-white flex flex-col">

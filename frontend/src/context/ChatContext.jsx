@@ -22,16 +22,17 @@ const ChatContext = ({ children }) => {
   const [Notification, setNotification] = useState([]);
 
   // ── CALL STATE (new) ──────────
-  const [callState, setCallState] = useState("idle"); 
-  const [incomingCall, setIncomingCall] = useState(null); 
+  const [callState, setCallState] = useState("idle");
+  const [incomingCall, setIncomingCall] = useState(null);
   const [callHistory, setCallHistory] = useState([]);
+  const [fetchCallHistoryAgain,setfetchCallHistoryAgain]=useState(false);
 
   const startCallRef = useRef(null);
-  function startCall(withVideo, receiverId,callerData) {
-  // console.log("startCall called, ref=", startCallRef.current); // add this
-  if (startCallRef.current) startCallRef.current(withVideo, receiverId,callerData);
-}
-  
+  function startCall(withVideo, receiverId, callerData) {
+    // console.log("startCall called, ref=", startCallRef.current); // add this
+    if (startCallRef.current)
+      startCallRef.current(withVideo, receiverId, callerData);
+  }
 
   const { User, isScoketConnected, socketRef } = useContext(authContext);
   const currentChatRef = useRef();
@@ -52,8 +53,13 @@ const ChatContext = ({ children }) => {
 
   useEffect(() => {
     if (!groupMemberList?.length || !chatDetails?.length || !User) return;
-    const users = chatDetails.map((val) => !val.isGroupChat && val.users).filter(Boolean).flat();
-    const userArray = groupMemberList.filter((val) => !users.some((item) => item._id === val._id));
+    const users = chatDetails
+      .map((val) => !val.isGroupChat && val.users)
+      .filter(Boolean)
+      .flat();
+    const userArray = groupMemberList.filter(
+      (val) => !users.some((item) => item._id === val._id),
+    );
     setgroupMemberArray(userArray);
   }, [groupMemberList, chatDetails, User?._id]);
 
@@ -65,22 +71,31 @@ const ChatContext = ({ children }) => {
   useEffect(() => {
     if (!isScoketConnected || !socketRef.current) return;
     const handleMessageRecieve = async function (message) {
-      if (!currentChatRef.current || currentChatRef.current?._id != message.chat._id) {
-        setNotification((prev) => !prev.some((val) => val._id === message._id) ? [message, ...prev] : prev);
+      if (
+        !currentChatRef.current ||
+        currentChatRef.current?._id != message.chat._id
+      ) {
+        setNotification((prev) =>
+          !prev.some((val) => val._id === message._id)
+            ? [message, ...prev]
+            : prev,
+        );
         setfetchChatAgain(true);
       } else {
         setUserMessages((prev) => [...prev, message]);
       }
     };
     socketRef.current.on("message recieved", handleMessageRecieve);
-    return () => { socketRef.current.off("message recieved", handleMessageRecieve); };
+    return () => {
+      socketRef.current.off("message recieved", handleMessageRecieve);
+    };
   }, [isScoketConnected]);
 
   // ── incoming call listener ─────
   useEffect(() => {
     if (!isScoketConnected || !socketRef.current) return;
-    const handleIncomingCall = ({ offer, callerId,withVideo,callerData}) => {
-      setIncomingCall({ offer, callerId,withVideo,callerData });
+    const handleIncomingCall = ({ offer, callerId, withVideo, callerData }) => {
+      setIncomingCall({ offer, callerId, withVideo, callerData });
       setCallState("incoming");
     };
     // missed calls delivered on connect
@@ -105,48 +120,41 @@ const ChatContext = ({ children }) => {
     };
   }, [isScoketConnected]);
 
-async function getNotificationAndHistory(){
-   if(!User)return;
+  async function getNotification() {
+    if (!User) return;
     try {
-
-      const [notification,History]=await Promise.allSettled([
-        api.get("/notification"),
-        api.get("/history")
-      ])
-      if(notification.status==="fulfilled"){
-        setNotification(notification.value.data.notification.map(val=>val.messageid))
+      const notification = await api.get("/notification");
+      if (notification.status === 200) {
+        setNotification(
+          notification.value.data.notification.map((val) => val.messageid),
+        );
       }
-      if(History.status==="fulfilled"){
-        setCallHistory(History.value.data.history)
-      }
-
-
     } catch (error) {
       console.log("Failed to fetch on mount:", error);
     }
-}
-  useEffect(()=>{
-   getNotificationAndHistory()
-  },[User])
+  }
+  useEffect(() => {
+    getNotification();
+  }, [User]);
 
   return (
     <chatContext.Provider
       value={{
-        chatDetails, setchatDetails,
-        selectedChat, setselectedChat,
-        fetchChatAgain, setfetchChatAgain,
-        groupMemberList, setgroupMemberList,
+        chatDetails,setchatDetails,
+        selectedChat,setselectedChat,
+        fetchChatAgain,setfetchChatAgain,
+        groupMemberList,setgroupMemberList,
         groupMemberArray,
-        selectedGroupMember, setselectedGroupMember,
-        GroupName, setGroupName,
-        isGroupChatProfileOpen, setisGroupChatProfileOpen,
-        UserMessages, setUserMessages,
-        Notification, setNotification,
-        callState, setCallState,
-        incomingCall, setIncomingCall,
-        callHistory, setCallHistory,
-        startCall,
-        startCallRef,
+        selectedGroupMember,setselectedGroupMember,
+        GroupName,setGroupName,
+        isGroupChatProfileOpen,setisGroupChatProfileOpen,
+        UserMessages,setUserMessages,
+        Notification,setNotification,
+        callState,setCallState,
+        incomingCall,setIncomingCall,
+        callHistory,setCallHistory,
+        startCall,startCallRef,
+        fetchCallHistoryAgain,setfetchCallHistoryAgain
       }}
     >
       {children}
