@@ -59,7 +59,7 @@ const CallHistory = () => {
 
       const History=await api.get("/history")
       if(History.status===200){
-        setCallHistory(History.value.data.history)
+        setCallHistory(History.data.history)
       }
       setfetchCallHistoryAgain(false);
      
