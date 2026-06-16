@@ -65,6 +65,7 @@ const CallModal = () => {
   const iceCandidateBuffer = useRef([]);
   const [IsRemoteUserMuted, setIsRemoteUserMuted] = useState(false);
   const callWithVideoRef = useRef(false);
+  const isCallerRef = useRef(false);
 
   // ──────────── Refs for cleanup ─────────
   const animFrameRef = useRef(null);
@@ -182,15 +183,30 @@ const CallModal = () => {
       const duration = callStartTimeRef.current
         ? Math.round((Date.now() - callStartTimeRef.current) / 1000)
         : null;
-      addToHistory({
-        callerid: remoteIdRef.current, // caller (Subrat)
-        receiverid: User._id, // receiver (Shivam)
-        Type: "incoming",
-        status: "answered",
-        callType: callWithVideoRef.current ? "video" : "audio",
-        withVideo: callWithVideoRef.current,
-        duration,
-      });
+      
+  if (isCallerRef.current) {
+    
+    addToHistory({
+      callerid: User._id,
+      receiverid: remoteIdRef.current,
+      Type: "outgoing",
+      status: "answered",
+      callType: callWithVideoRef.current ? "video" : "audio",
+      withVideo: callWithVideoRef.current,
+      duration,
+    });
+  } else {
+    
+    addToHistory({
+      callerid: remoteIdRef.current,
+      receiverid: User._id,
+      Type: "incoming",
+      status: "answered",
+      callType: callWithVideoRef.current ? "video" : "audio",
+      withVideo: callWithVideoRef.current,
+      duration,
+    });
+  }
       cleanupCall();
     });
 
@@ -294,6 +310,7 @@ const CallModal = () => {
   async function initiateCall(withVideo, receiverId, callerData) {
     const stream = await getLocalStream(withVideo);
     if (!stream) return;
+     isCallerRef.current = true; 
     setIsAudioOnly(!withVideo);
     setCallState("calling");
     remoteIdRef.current = receiverId;
@@ -336,6 +353,7 @@ const CallModal = () => {
     if (!incomingCall) return;
     const stream = await getLocalStream(withVideo);
     if (!stream) return;
+    isCallerRef.current = false; 
     setIsAudioOnly(!withVideo);
     callStartTimeRef.current = Date.now();
     remoteIdRef.current = incomingCall.callerId;
@@ -384,6 +402,8 @@ const CallModal = () => {
       ? Math.round((Date.now() - callStartTimeRef.current) / 1000)
       : null;
 
+   if (isCallerRef.current) {
+    
     addToHistory({
       callerid: User._id,
       receiverid: remoteIdRef.current,
@@ -393,6 +413,18 @@ const CallModal = () => {
       withVideo: callWithVideoRef.current,
       duration,
     });
+  } else {
+    
+    addToHistory({
+      callerid: remoteIdRef.current,
+      receiverid: User._id,
+      Type: "incoming",
+      status: "answered",
+      callType: callWithVideoRef.current ? "video" : "audio",
+      withVideo: callWithVideoRef.current,
+      duration,
+    });
+  }
     socketRef.current.emit("end-call", remoteIdRef.current);
     cleanupCall();
   }
@@ -417,6 +449,7 @@ const CallModal = () => {
     iceCandidateBuffer.current = [];
     remoteIdRef.current = "";
     callWithVideoRef.current = false;
+    isCallerRef.current = false; 
     setCallState("idle");
     setIncomingCall(null);
     setIsMuted(false);
