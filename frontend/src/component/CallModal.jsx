@@ -44,6 +44,7 @@ const CallModal = () => {
     incomingCall,
     setIncomingCall,
     startCallRef,
+    setfetchCallHistoryAgain
   } = useContext(chatContext);
 
   // ──────── WebRTC refs ────────
@@ -100,7 +101,11 @@ const CallModal = () => {
   // ──────── History helper ────
   async function addToHistory(entry) {
     try {
-      await api.post("/history", entry);
+      const response=await api.post("/history", entry);
+      if(response.status===201){
+        setfetchCallHistoryAgain(true)
+      }
+
     } catch (error) {
       console.log("Failed to save call history:", error);
       // console.log(error)
