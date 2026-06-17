@@ -1,56 +1,80 @@
-import { useContext, useEffect, useState } from "react"
-import { authContext } from "../context/AuthContext"
+import { useContext, useEffect, useState } from "react";
+import { authContext } from "../context/AuthContext";
 import api from "../api/axiosInterceptor";
-import { useNavigate } from "react-router"
+import { useNavigate } from "react-router";
 import { chatContext } from "../context/ChatContext";
 import Skeleton from "./Skeleton";
 
-
 const UserProtectedWrapper = ({ children }) => {
   const { User, setUser } = useContext(authContext);
-  const{setfetchChatAgain}=useContext(chatContext);
-  const [isLoading, setisLoading] = useState(true)
-  const navigate = useNavigate()
+  const { setchatDetails, setNotification } = useContext(chatContext);
+
+  const [isLoading, setisLoading] = useState(true);
+  const navigate = useNavigate();
+
   async function fetchUserProfile() {
+    const { data } = await api.get("/user/profile");
+    return data;
+  }
+
+  async function fetchChatList() {
+    const { data } = await api.get("/chat");
+    return data;
+  }
+
+  async function getNotification() {
+    const { data } = await api.get("/notification");
+    return data.notification;
+  }
+
+  async function fetchUserData() {
     try {
-      const userDetails = await api.get("/user/profile");
-      // if (!userDetails) return;
-      if(userDetails.status===200){
-        setisLoading(false)
-        setUser(userDetails.data);
-        setfetchChatAgain(true);
-        // localStorage.setItem("userdetails", JSON.stringify(userDetails.data));
+      const [profile, chat, notification] = await Promise.allSettled([
+        fetchUserProfile(),
+        fetchChatList(),
+        getNotification(),
+      ]);
+
+      
+      if (profile.status === "fulfilled") {
+        setUser(profile.value);
+      } else {
+        navigate("/user/login");
+        return;
       }
 
-    } catch (err) {
-      console.log(err)
-      console.log(err.message);
-      navigate("/user/login")
+      
+      if (chat.status === "fulfilled") {
+        setchatDetails(chat.value);
+      }
 
+      
+      if (notification.status === "fulfilled") {
+        setNotification(
+          notification.value.map((item) => item.messageid)
+        );
+      }
+
+      setisLoading(false);
+    } catch (error) {
+      console.log(error);
+      navigate("/user/login");
     }
-
-
   }
+
   useEffect(() => {
-    if(!User){
-      fetchUserProfile()
-    }
-    else {
+    if (!User) {
+      fetchUserData();
+    } else {
       setisLoading(false);
     }
-  }, [])
+  }, []);
+
   if (isLoading) {
-  return (
-    // <div className="inset-0 fixed flex flex-col justify-center items-center text-5xl">Loading........</div>
-    <Skeleton/>
-  );
-}
-  return (
-    <>
+    return <Skeleton />;
+  }
 
-      {User && children}
-    </>
-  )
-}
+  return <>{User && children}</>;
+};
 
-export default UserProtectedWrapper
+export default UserProtectedWrapper;

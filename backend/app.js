@@ -23,7 +23,7 @@ app.use(cors({
 }));
 app.use(cookieParser());
 
-app.use(passport.initialize());
+app.use(passport.initialize());  
 
 
 app.use("/user", userRouter);
@@ -32,6 +32,9 @@ app.use("/message", messageRouter);
 app.use("/notification", notificationRouter);
 app.use("/history", callHistoryRouter);
 
+app.get("/health",(req,res)=>{
+    res.status(200).json({ok:true})
+})
 app.get("/", (req, res) => {
     res.send("<h1>Welcome Shivam this is Chat app</h1>");
 });

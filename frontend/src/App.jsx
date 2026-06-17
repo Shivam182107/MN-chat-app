@@ -1,11 +1,14 @@
+import { lazy, Suspense } from "react";
 import { Route, Routes } from "react-router";
 import "./App.css";
-import UserSignup from "./pages/UserSignup";
-import UserLogin from "./pages/UserLogin";
-import Home from "./pages/Home";
-import UserProtectedWrapper from "./pages/UserProtectedWrapper";
 import { Toaster } from "react-hot-toast";
-import GoogleAuthSuccess from "./pages/GoogleAuthSuccess";
+import Skeleton from "./pages/Skeleton";
+
+const Home = lazy(() => import("./pages/Home"));
+const UserSignup = lazy(() => import("./pages/UserSignup"));
+const UserLogin = lazy(() => import("./pages/UserLogin"));
+const GoogleAuthSuccess = lazy(() => import("./pages/GoogleAuthSuccess"));
+const UserProtectedWrapper = lazy(() => import("./pages/UserProtectedWrapper"));
 
 function App() {
   return (
@@ -33,19 +36,22 @@ function App() {
           },
         }}
       />
-      <Routes>
-        <Route
-          path="/"
-          element={
-            <UserProtectedWrapper>
-              <Home />
-            </UserProtectedWrapper>
-          }
-        />
-        <Route path="/user/register" element={<UserSignup />} />
-        <Route path="/user/login" element={<UserLogin />} />
-        <Route path="/auth/google/success" element={<GoogleAuthSuccess/>} />
-      </Routes>
+      
+      <Suspense fallback={<Skeleton />}>
+        <Routes>
+          <Route
+            path="/"
+            element={
+              <UserProtectedWrapper>
+                <Home />
+              </UserProtectedWrapper>
+            }
+          />
+          <Route path="/user/register" element={<UserSignup />} />
+          <Route path="/user/login" element={<UserLogin />} />
+          <Route path="/auth/google/success" element={<GoogleAuthSuccess />} />
+        </Routes>
+      </Suspense>
     </>
   );
 }

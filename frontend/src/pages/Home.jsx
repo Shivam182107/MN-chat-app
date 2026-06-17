@@ -1,5 +1,4 @@
-import { useEffect, useRef, useState } from "react";
-import Navabar from "../component/Navabar";
+import { lazy, Suspense, useEffect, useRef, useState, useContext } from "react";
 import { RiChatNewFill } from "react-icons/ri";
 import { BsCameraVideo, BsThreeDotsVertical } from "react-icons/bs";
 import { FaSearch } from "react-icons/fa";
@@ -9,18 +8,22 @@ import { MdOutlineGroupAdd } from "react-icons/md";
 import { MdGroup } from "react-icons/md";
 import { motion } from "framer-motion";
 import { Link, useNavigate } from "react-router";
-import CreateGroup from "../component/CreateGroup";
-import UserList from "../component/UserList";
-import Profile from "../component/Profile";
-import MessageContainer from "../component/MessageContainer";
-import { useContext } from "react";
-import { chatContext } from "../context/ChatContext";
-import SearchUserModal from "../component/SearchUserModal";
-import GroupChatProfile from "../component/GroupChatProfile";
-import { authContext } from "../context/AuthContext";
 import { io } from "socket.io-client";
-import CallModal from "../component/CallModal";
-import CallHistory from "../component/CallHistory";
+import { chatContext } from "../context/ChatContext";
+import { authContext } from "../context/AuthContext";
+
+import Navabar from "../component/Navabar";
+import UserList from "../component/UserList";
+import api from "../api/axiosInterceptor";
+
+
+const CreateGroup = lazy(() => import("../component/CreateGroup"));
+const Profile = lazy(() => import("../component/Profile"));
+const CallHistory = lazy(() => import("../component/CallHistory"));
+const CallModal = lazy(() => import("../component/CallModal"));
+const GroupChatProfile = lazy(() => import("../component/GroupChatProfile"));
+const MessageContainer = lazy(() => import("../component/MessageContainer"));
+const SearchUserModal = lazy(() => import("../component/SearchUserModal"));
 
 const Home = () => {
   const [isPopupOpen, setisPopupOpen] = useState(false);
@@ -36,6 +39,7 @@ const Home = () => {
     setGroupName,
     isGroupChatProfileOpen,
     Notification,
+    setCallHistory
   } = useContext(chatContext);
   const [isOpenSearchUserModal, setisOpenSearchUserModal] = useState(false);
   const [searchInputValue, setsearchInputValue] = useState("");
@@ -66,13 +70,32 @@ const Home = () => {
 
   useEffect(() => {
     if (!User) return;
-    socketRef.current = io(import.meta.env.VITE_BASE_URL);
+    if (socketRef.current?.connected) return;
+    socketRef.current = io(import.meta.env.VITE_BASE_URL, {
+      transports: ["websocket"],
+      reconnectionAttempts: 5,
+    });
     socketRef.current.on("connect", () => {
       setisScoketConnected(true);
       socketRef.current.emit("setup", User);
     });
+    return () => {
+      socketRef.current?.disconnect();
+    };
   }, [User]);
-  
+
+  async function getCallHistoryOnBtnClick(){
+    try {
+
+      const History=await api.get("/history")
+      if(History.status===200){
+        setCallHistory(History.data.history)
+      }
+    } catch (error) {
+      console.log("Failed to fetch on mount:", error);
+    }
+  }
+
   return (
     <>
       <div className="h-[100dvh] flex flex-col bg-[#F7F5F3]">
@@ -119,105 +142,110 @@ const Home = () => {
               size={25}
               onClick={() => {
                 setisCallHistoryOpen((prev) => !prev);
+                getCallHistoryOnBtnClick();
               }}
               className="hover:cursor-pointer"
             />
           </div>
 
           {/* Chat List */}
-          {isCallHistoryOpen ? (
-            <CallHistory />
-          ) : isProfileActive ? (
-            <Profile />
-          ) : GroupCreation ? (
-            <CreateGroup removeGroupCreate={removeGroupCreate} />
-          ) : (
-            <div className="flex w-full">
-              {isGroupChatProfileOpen ? (
-                <GroupChatProfile />
-              ) : (
-                <div
-                  className={`md:w-[410px] flex-shrink-0 w-full bg-[#161717] text-white border-r border-black flex flex-col ${selectedChat ? "hidden md:flex " : "flex"}`}
-                >
-                  <div className="flex justify-between items-center py-4 px-4 relative">
-                    <h1 className="text-3xl font-medium">Chats</h1>
-                    <span className="flex items-center gap-3 text-xl">
-                      <RiChatNewFill
-                        onClick={() => searchRef.current.focus()}
-                        className="hover:cursor-pointer"
-                      />
-                      <BsThreeDotsVertical
-                        onClick={() => setisPopupOpen((prev) => !prev)}
-                        className="hover:cursor-pointer relative"
-                      />
-                      {isPopupOpen && (
-                        <div className="absolute right-[9%] top-4 mt-4 z-50">
-                          <div className="backdrop-blur-xl bg-black/90 text-white rounded-xl shadow-2xl py-2 w-52 border border-white/10 ring-1 ring-white/5">
-                            <Link
-                              to=""
-                              className="block px-4 py-2 text-base hover:bg-white/10 transition"
-                            >
-                              Read Messages
-                            </Link>
-                            <Link
-                              to=""
-                              className="block px-4 py-2 text-base hover:bg-white/10 transition"
-                            >
-                              Unread Messages
-                            </Link>
-                            <Link
-                              to=""
-                              className="block px-4 py-2 text-base hover:bg-white/10 transition"
-                            >
-                              Star Messages
-                            </Link>
-                          </div>
-                        </div>
-                      )}
-                    </span>
-                  </div>
-                  <div className="mb-4 relative px-4 relative ">
-                    <input
-                      type="text"
-                      name="Search"
-                      className="bg-[#2E2F2F] w-full py-2 rounded-full pl-10 placeholder:text-[#9FACAC] focus:outline-none focus:ring-2 focus:ring-[#5CC064]"
-                      placeholder="Search or start a new chat"
-                      ref={searchRef}
-                      onChange={handleSearch}
-                      value={searchInputValue}
-                    />
-                    <FaSearch className="absolute left-8 top-1/2 -translate-y-1/2 text-gray-500 " />
-                    {isOpenSearchUserModal && (
-                      <SearchUserModal
-                        SearchValue={searchInputValue}
-                        handleInput={handleInput}
-                      />
-                    )}
-                  </div>
-                  <UserList isGroupsOpen={isGroupsOpen} />
-                </div>
-              )}
-
-              {selectedChat ? (
-                <MessageContainer />
-              ) : (
-                <div className="hidden md:flex flex-1 bg-gray-100 items-center justify-center">
-                  <motion.h1
-                    className="text-3xl lg:text-5xl font-medium text-center px-4"
-                    initial={{ opacity: 0, y: 60 }}
-                    animate={{ opacity: 1, y: 0 }}
-                    transition={{ duration: 0.8, ease: "easeOut" }}
+          <Suspense fallback={null}>
+            {isCallHistoryOpen ? (
+              <CallHistory />
+            ) : isProfileActive ? (
+              <Profile />
+            ) : GroupCreation ? (
+              <CreateGroup removeGroupCreate={removeGroupCreate} />
+            ) : (
+              <div className="flex w-full">
+                {isGroupChatProfileOpen ? (
+                  <GroupChatProfile />
+                ) : (
+                  <div
+                    className={`md:w-[410px] flex-shrink-0 w-full bg-[#161717] text-white border-r border-black flex flex-col ${selectedChat ? "hidden md:flex " : "flex"}`}
                   >
-                    Welcome buddy once again
-                  </motion.h1>
-                </div>
-              )}
-            </div>
-          )}
+                    <div className="flex justify-between items-center py-4 px-4 relative">
+                      <h1 className="text-3xl font-medium">Chats</h1>
+                      <span className="flex items-center gap-3 text-xl">
+                        <RiChatNewFill
+                          onClick={() => searchRef.current.focus()}
+                          className="hover:cursor-pointer"
+                        />
+                        <BsThreeDotsVertical
+                          onClick={() => setisPopupOpen((prev) => !prev)}
+                          className="hover:cursor-pointer relative"
+                        />
+                        {isPopupOpen && (
+                          <div className="absolute right-[9%] top-4 mt-4 z-50">
+                            <div className="backdrop-blur-xl bg-black/90 text-white rounded-xl shadow-2xl py-2 w-52 border border-white/10 ring-1 ring-white/5">
+                              <Link
+                                to=""
+                                className="block px-4 py-2 text-base hover:bg-white/10 transition"
+                              >
+                                Read Messages
+                              </Link>
+                              <Link
+                                to=""
+                                className="block px-4 py-2 text-base hover:bg-white/10 transition"
+                              >
+                                Unread Messages
+                              </Link>
+                              <Link
+                                to=""
+                                className="block px-4 py-2 text-base hover:bg-white/10 transition"
+                              >
+                                Star Messages
+                              </Link>
+                            </div>
+                          </div>
+                        )}
+                      </span>
+                    </div>
+                    <div className="mb-4 relative px-4 relative ">
+                      <input
+                        type="text"
+                        name="Search"
+                        className="bg-[#2E2F2F] w-full py-2 rounded-full pl-10 placeholder:text-[#9FACAC] focus:outline-none focus:ring-2 focus:ring-[#5CC064]"
+                        placeholder="Search or start a new chat"
+                        ref={searchRef}
+                        onChange={handleSearch}
+                        value={searchInputValue}
+                      />
+                      <FaSearch className="absolute left-8 top-1/2 -translate-y-1/2 text-gray-500 " />
+                      {isOpenSearchUserModal && (
+                        <SearchUserModal
+                          SearchValue={searchInputValue}
+                          handleInput={handleInput}
+                        />
+                      )}
+                    </div>
+                    <UserList isGroupsOpen={isGroupsOpen} />
+                  </div>
+                )}
+
+                {selectedChat ? (
+                  <MessageContainer />
+                ) : (
+                  <div className="hidden md:flex flex-1 bg-gray-100 items-center justify-center">
+                    <motion.h1
+                      className="text-3xl lg:text-5xl font-medium text-center px-4"
+                      initial={{ opacity: 0, y: 60 }}
+                      animate={{ opacity: 1, y: 0 }}
+                      transition={{ duration: 0.8, ease: "easeOut" }}
+                    >
+                      Welcome buddy once again
+                    </motion.h1>
+                  </div>
+                )}
+              </div>
+            )}
+          </Suspense>
         </div>
       </div>
 
-      <CallModal />
+      <Suspense fallback={null}>
+        <CallModal />
+      </Suspense>
     </>
   );
 };

@@ -3,6 +3,7 @@ import ChatWindow from "./ChatWindow";
 import { BiSolidPhoneIncoming, BiSolidPhoneOutgoing } from "react-icons/bi";
 import { chatContext } from "../context/ChatContext";
 import { useEffect } from "react";
+import api from "../api/axiosInterceptor";
 
 
 
@@ -54,7 +55,7 @@ const CallHistory = () => {
   const { callHistory,setCallHistory,fetchCallHistoryAgain,setfetchCallHistoryAgain } = useContext(chatContext);
 
   async function getCallHistory(){
-   
+    
     try {
 
       const History=await api.get("/history")
@@ -62,7 +63,7 @@ const CallHistory = () => {
         setCallHistory(History.data.history)
       }
       setfetchCallHistoryAgain(false);
-     
+      
     } catch (error) {
       console.log("Failed to fetch on mount:", error);
     }

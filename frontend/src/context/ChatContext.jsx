@@ -120,24 +120,8 @@ const ChatContext = ({ children }) => {
     };
   }, [isScoketConnected]);
 
-  async function getNotification() {
-    if (!User) return;
-    try {
-      const notification = await api.get("/notification");
-      if (notification.status === 200) {
-        setNotification(
-          notification.value.data.notification.map((val) => val.messageid),
-
-        );
-        setfetchCallHistoryAgain(true);
-      }
-    } catch (error) {
-      console.log("Failed to fetch on mount:", error);
-    }
-  }
-  useEffect(() => {
-    getNotification();
-  }, [User]);
+  
+ 
 
   return (
     <chatContext.Provider

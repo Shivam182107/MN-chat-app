@@ -40,6 +40,7 @@ const missedCalls = {};
 io.on("connection", (socket) => {
   socket.on("setup", (userData) => {
     socket.join(userData._id);
+    socket.userId = userData._id;
     socket.emit("connected");
     if (missedCalls[userData._id]?.length > 0) {
       socket.emit("missed-calls", missedCalls[userData._id]);
@@ -73,6 +74,15 @@ io.on("connection", (socket) => {
   socket.on("end-call", (receiverId) => socket.to(receiverId).emit("call-ended"));
   socket.on("reject-call", (receiverId) => socket.to(receiverId).emit("call-rejected"));
   socket.on("remote-mute",(isMute,receiverId)=>{socket.to(receiverId).emit("remote-user-muted",isMute)})
+  socket.on("disconnect", () => {
+    if (socket.userId) {
+    socket.leave(socket.userId); 
+  }
+    
+  });
+  
+
+  
 });
 server.listen(3000, () => {
   console.log("app is runnning on this port :", 3000);
