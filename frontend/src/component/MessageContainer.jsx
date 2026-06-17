@@ -72,9 +72,8 @@ const MessageContainer = () => {
         socketRef.current.emit("send message", messageResponse.data);
         setUserMessages((prev) => [...prev, messageResponse.data]);
         setMsgInputValue("");
-        if(chatDetails[0]._id!=selectedChat._id){
-          setfetchChatAgain(true);
-        }
+        setfetchChatAgain(true);
+        
       }
     } catch (e) { console.log(e.message); }
   }

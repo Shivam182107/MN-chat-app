@@ -14,7 +14,7 @@ const UserList = ({ isGroupsOpen }) => {
     setfetchChatAgain,
     Notification,
     setNotification,
-    callHistory,
+   
   } = useContext(chatContext);
   const { User } = useContext(authContext);
 
