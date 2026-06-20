@@ -17,11 +17,10 @@ module.exports.accesPrivateChat = async (req, res) => {
       ],
     })
     .populate("users", "-password")
-    .populate("latestMessage");
-  user.populate(isChat, {
-    path: "latestMessage.sender",
-    select: "fullname email pic",
-  });
+    .populate({
+      path:"latestMessage",
+      populate:{path:"sender",select:"fullname email pic"}
+    });
   if (isChat.length > 0) {
     res.send(isChat[0]);
   } else {

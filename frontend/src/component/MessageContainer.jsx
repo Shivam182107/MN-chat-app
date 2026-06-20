@@ -13,17 +13,25 @@ import api from "../api/axiosInterceptor";
 
 const MessageContainer = () => {
   const {
-    selectedChat, setselectedChat,
+    selectedChat,
+    setselectedChat,
     setisGroupChatProfileOpen,
-    UserMessages, setUserMessages,
-    Notification, isGroupChatProfileOpen,
-    startCall, 
+    UserMessages,
+    setUserMessages,
+    Notification,
+    isGroupChatProfileOpen,
+    startCall,
     setfetchChatAgain,
-    chatDetails
+    chatDetails,
+    setchatDetails,
   } = useContext(chatContext);
   const { User, socketRef, isScoketConnected } = useContext(authContext);
-
-  const { pic, fullname } = getSenderDetails(User, selectedChat?.users, selectedChat?.isGroupChat) || { pic: "", fullname: "" };
+  const typingTimeoutRef=useRef(null);
+  const { pic, fullname } = getSenderDetails(
+    User,
+    selectedChat?.users,
+    selectedChat?.isGroupChat,
+  ) || { pic: "", fullname: "" };
 
   const [isCallPopupOpen, setIsCallPopupOpen] = useState(false);
   const [MsgInputValue, setMsgInputValue] = useState("");
@@ -31,10 +39,12 @@ const MessageContainer = () => {
   const [isTyping, setisTyping] = useState(false);
   const BottomRef = useRef(null);
 
-  // get the other user's _id for calling for not group chat 
+  // get the other user's _id for calling for not group chat
   const otherUser = selectedChat?.users?.find((u) => u._id !== User._id);
 
-  function handleBackFeature() { setselectedChat(null); }
+  function handleBackFeature() {
+    setselectedChat(null);
+  }
 
   function handleMsgInput(e) {
     setMsgInputValue(e.target.value);
@@ -45,7 +55,8 @@ const MessageContainer = () => {
     }
     let lastTypingTime = new Date().getTime();
     let timeLength = 3000;
-    setTimeout(() => {
+if (typingTimeoutRef.current) clearTimeout(typingTimeoutRef.current);
+    typingTimeoutRef.current=setTimeout(() => {
       let timeNow = new Date().getTime();
       if (timeNow - lastTypingTime > timeLength && Typing) {
         socketRef.current.emit("stop typing", selectedChat._id);
@@ -59,23 +70,58 @@ const MessageContainer = () => {
     if (e.key === "Enter") {
       e.preventDefault();
       sendMessage(MsgInputValue, selectedChat._id);
-      
     }
   }
 
   async function sendMessage(content, chatId) {
     if (!content || !chatId) return;
     try {
-      if (Typing) { socketRef.current.emit("stop typing", chatId); setTyping(false); }
+      const tempid = `temp-${Date.now()}`;
+      const message = {
+        _id: tempid,
+        sender: {_id:User._id},
+        content,
+        chatId,
+        createdAt: new Date().toISOString(),
+      };
+      //show optimastic update of message
+      setUserMessages((prev) => {
+        return [...prev, message];
+      });
+      setMsgInputValue("");
+
+      if (Typing) {
+        socketRef.current.emit("stop typing", chatId);
+        setTyping(false);
+      }
       const messageResponse = await api.post("/message", { content, chatId });
       if (messageResponse.status === 200) {
+        setUserMessages((prev) => {
+          let arr = [...prev];
+          arr = arr.map((val) =>
+            val._id === tempid ? messageResponse.data : val,
+          );
+          return arr;
+        });
         socketRef.current.emit("send message", messageResponse.data);
-        setUserMessages((prev) => [...prev, messageResponse.data]);
-        setMsgInputValue("");
-        setfetchChatAgain(true);
-        
+        //show optimastic update  without refetching the chat
+        setchatDetails((prev) => {
+          let arr = [...prev];
+          arr = arr.map((val) =>
+            val._id == messageResponse.data.chat._id
+              ? {
+                  ...val,
+                  latestMessage: messageResponse.data,
+                }
+              : val,
+          );
+          return arr;
+        });
       }
-    } catch (e) { console.log(e.message); }
+    } catch (e) {
+      console.log(e.message);
+      setUserMessages((prev) => prev.filter((m) => m._id !== tempid));
+    }
   }
 
   async function fetchAllMessageForThechat(chatId) {
@@ -86,7 +132,9 @@ const MessageContainer = () => {
         setUserMessages(messageResponse.data);
         socketRef.current.emit("join chat", chatId);
       }
-    } catch (e) { console.log(e.message); }
+    } catch (e) {
+      console.log(e.message);
+    }
   }
 
   useEffect(() => {
@@ -107,24 +155,51 @@ const MessageContainer = () => {
 
   return (
     <>
-      <div className={`flex-1 flex-col bg-[url('/MsgBoxImage.jpg')] ${isGroupChatProfileOpen ? "hidden md:flex" : "flex"}`}>
+      <div
+        className={`flex-1 flex-col bg-[url('/MsgBoxImage.jpg')] ${isGroupChatProfileOpen ? "hidden md:flex" : "flex"}`}
+      >
         {/* Header */}
         <header className="w-full sticky top-0 z-10">
           <div className="h-12 bg-[#1D1F1F] border-gray-200 text-white shadow-2xl flex justify-between items-center">
             <div className="flex items-center pl-2">
-              <MdOutlineKeyboardBackspace size={24} className="md:hidden mr-2 cursor-pointer" onClick={handleBackFeature} />
-              <div className="w-8 rounded-[50%] ml-2 h-8 cursor-pointer"
-                style={{ border: selectedChat.isGroupChat ? "1px solid black" : "" }}
-                onClick={() => { if (selectedChat.isGroupChat) setisGroupChatProfileOpen(true); }}>
-                <img src={selectedChat.isGroupChat ? "/GroupDefaultImage.png" : pic} alt="" className="w-full rounded-[50%]" />
+              <MdOutlineKeyboardBackspace
+                size={24}
+                className="md:hidden mr-2 cursor-pointer"
+                onClick={handleBackFeature}
+              />
+              <div
+                className="w-8 rounded-[50%] ml-2 h-8 cursor-pointer"
+                style={{
+                  border: selectedChat.isGroupChat ? "1px solid black" : "",
+                }}
+                onClick={() => {
+                  if (selectedChat.isGroupChat) setisGroupChatProfileOpen(true);
+                }}
+              >
+                <img
+                  src={
+                    selectedChat.isGroupChat ? "/GroupDefaultImage.png" : pic
+                  }
+                  alt=""
+                  className="w-full rounded-[50%]"
+                />
               </div>
-              <p className="ml-2">{selectedChat.isGroupChat ? selectedChat.chatName : fullname.firstname}</p>
+              <p className="ml-2">
+                {selectedChat.isGroupChat
+                  ? selectedChat.chatName
+                  : fullname.firstname}
+              </p>
             </div>
 
             {!selectedChat?.isGroupChat && (
               <div className="relative mr-4 text-white">
-                <button onClick={(e) => { e.stopPropagation(); setIsCallPopupOpen((prev) => !prev); }}
-                  className="flex items-center gap-2 px-4 py-1.5 border border-gray-300 rounded-full  transition">
+                <button
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    setIsCallPopupOpen((prev) => !prev);
+                  }}
+                  className="flex items-center gap-2 px-4 py-1.5 border border-gray-300 rounded-full  transition"
+                >
                   <BsCameraVideo size={16} />
                   <span className="text-sm font-medium">Call</span>
                   <span className="text-xs">▼</span>
@@ -141,11 +216,14 @@ const MessageContainer = () => {
                   transition={{ type: "spring", stiffness: 260, damping: 20 }}
                   style={{ transformOrigin: "top right" }}
                   className="absolute right-4 top-14 z-50"
-                  onClick={(e) => e.stopPropagation()}>
+                  onClick={(e) => e.stopPropagation()}
+                >
                   <div className="bg-[#1f1f1f] text-white rounded-2xl shadow-2xl p-3 w-64">
                     <div className="flex items-center gap-3 mb-3 px-2">
                       <img src={pic} alt="" className="w-9 h-9 rounded-full" />
-                      <h2 className="font-medium text-sm">{fullname.firstname}</h2>
+                      <h2 className="font-medium text-sm">
+                        {fullname.firstname}
+                      </h2>
                     </div>
                     <div className="flex flex-col gap-1">
                       {/* ── VOICE CALL BUTTON ── */}
@@ -153,9 +231,10 @@ const MessageContainer = () => {
                         className="flex items-center gap-3 px-3 py-2 hover:bg-[#2a2a2a] rounded-lg text-sm"
                         onClick={() => {
                           setIsCallPopupOpen(false);
-                          startCall(false, otherUser._id,User); // audio only
-                          console.log("audio call")
-                        }}>
+                          startCall(false, otherUser._id, User); // audio only
+                          console.log("audio call");
+                        }}
+                      >
                         <MdCall size={18} />
                         Voice call
                       </button>
@@ -164,9 +243,10 @@ const MessageContainer = () => {
                         className="flex items-center gap-3 px-3 py-2 hover:bg-[#2a2a2a] rounded-lg text-sm"
                         onClick={() => {
                           setIsCallPopupOpen(false);
-                          startCall(true, otherUser._id,User); // with video
-                          console.log("video call")
-                        }}>
+                          startCall(true, otherUser._id, User); // with video
+                          console.log("video call");
+                        }}
+                      >
                         <BsCameraVideo size={18} />
                         Video call
                       </button>
@@ -181,34 +261,44 @@ const MessageContainer = () => {
         {/* Chat Area */}
         <main className="flex-1 flex flex-col overflow-hidden">
           <div className="flex-1 overflow-y-auto msg-custom-scrollbar px-4 pt-4 space-y-3 flex flex-col">
-            {UserMessages && UserMessages.map((val) => {
-              let isMyMessage = val.sender._id == User._id;
-              return (
-                <div key={val._id} className={`w-full flex ${isMyMessage ? "justify-end" : "justify-start"}`}>
-                  {!isMyMessage ? (
-                    <div className="relative bg-black text-white px-3 py-2 w-fit max-w-[65%] rounded-lg rounded-tl-none">
-                      <span className="absolute left-[-7px] top-0 w-0 h-0 border-t-[0px] border-t-transparent border-b-[10px] border-b-transparent border-r-[8px] border-r-black" />
-                      <div className="flex items-end gap-2">
-                        <p className="text-sm break-words">{val.content}</p>
-                        <span className="text-[11px] text-gray-500 whitespace-nowrap">
-                          {new Date(val.createdAt).toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" })}
-                        </span>
+            {UserMessages &&
+              UserMessages.map((val) => {
+                let isMyMessage = val.sender._id == User._id;
+                return (
+                  <div
+                    key={val._id}
+                    className={`w-full flex ${isMyMessage ? "justify-end" : "justify-start"}`}
+                  >
+                    {!isMyMessage ? (
+                      <div className="relative bg-black text-white px-3 py-2 w-fit max-w-[65%] rounded-lg rounded-tl-none">
+                        <span className="absolute left-[-7px] top-0 w-0 h-0 border-t-[0px] border-t-transparent border-b-[10px] border-b-transparent border-r-[8px] border-r-black" />
+                        <div className="flex items-end gap-2">
+                          <p className="text-sm break-words">{val.content}</p>
+                          <span className="text-[11px] text-gray-500 whitespace-nowrap">
+                            {new Date(val.createdAt).toLocaleTimeString([], {
+                              hour: "2-digit",
+                              minute: "2-digit",
+                            })}
+                          </span>
+                        </div>
                       </div>
-                    </div>
-                  ) : (
-                    <div className="relative bg-black text-white px-3 py-2 w-fit max-w-[65%] rounded-lg rounded-tr-none">
-                      <span className="absolute right-[-7px] top-0 w-0 h-0 border-t-[0px] border-t-transparent border-b-[10px] border-b-transparent border-l-[8px] border-l-black" />
-                      <div className="flex items-end gap-2">
-                        <p className="text-sm break-words">{val.content}</p>
-                        <span className="text-[11px] text-gray-500 whitespace-nowrap">
-                          {new Date(val.createdAt).toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" })}
-                        </span>
+                    ) : (
+                      <div className="relative bg-black text-white px-3 py-2 w-fit max-w-[65%] rounded-lg rounded-tr-none">
+                        <span className="absolute right-[-7px] top-0 w-0 h-0 border-t-[0px] border-t-transparent border-b-[10px] border-b-transparent border-l-[8px] border-l-black" />
+                        <div className="flex items-end gap-2">
+                          <p className="text-sm break-words">{val.content}</p>
+                          <span className="text-[11px] text-gray-500 whitespace-nowrap">
+                            {new Date(val.createdAt).toLocaleTimeString([], {
+                              hour: "2-digit",
+                              minute: "2-digit",
+                            })}
+                          </span>
+                        </div>
                       </div>
-                    </div>
-                  )}
-                </div>
-              );
-            })}
+                    )}
+                  </div>
+                );
+              })}
             <div ref={BottomRef}></div>
           </div>
 
@@ -222,12 +312,23 @@ const MessageContainer = () => {
 
           <div className="px-2 py-1 w-full sticky bottom-0 z-10">
             <form className="relative flex items-center">
-              <FaPlus size={20} className="absolute left-4 text-white cursor-pointer" />
-              <input type="text" placeholder="Type a message"
+              <FaPlus
+                size={20}
+                className="absolute left-4 text-white cursor-pointer"
+              />
+              <input
+                type="text"
+                placeholder="Type a message"
                 className="py-3 pl-12 pr-12 bg-black text-white w-full mb-1 rounded-full placeholder:text-gray-400 outline-none"
-                value={MsgInputValue} onChange={handleMsgInput} onKeyDown={handleSendingMessageByEnterKey} />
-              <IoSend size={20} className="absolute right-4 text-white cursor-pointer"
-                onClick={() => sendMessage(MsgInputValue, selectedChat._id)} />
+                value={MsgInputValue}
+                onChange={handleMsgInput}
+                onKeyDown={handleSendingMessageByEnterKey}
+              />
+              <IoSend
+                size={20}
+                className="absolute right-4 text-white cursor-pointer"
+                onClick={() => sendMessage(MsgInputValue, selectedChat._id)}
+              />
             </form>
           </div>
         </main>

@@ -4,6 +4,7 @@ import { BiSolidPhoneIncoming, BiSolidPhoneOutgoing } from "react-icons/bi";
 import { chatContext } from "../context/ChatContext";
 import { useEffect } from "react";
 import api from "../api/axiosInterceptor";
+import { formatDateLabel, formatDuration } from "../config/ChatLogic";
 
 
 
@@ -14,42 +15,6 @@ const statusColor = {
   cancelled: "text-yellow-500",
   "no-answer": "text-orange-400",
 };
-
-function formatDuration(sec) {
-  if (!sec) return null;
-  if (sec < 60) return `${sec}s`;
-
-  const mins = Math.floor(sec / 60);
-  const secs = sec % 60;
-
-  return `${mins}m ${secs}s`;
-}
-
-function formatDateLabel(dateString) {
-  const date = new Date(dateString);
-  const today = new Date();
-
-  const isToday = date.toDateString() === today.toDateString();
-
-  const yesterday = new Date();
-  yesterday.setDate(today.getDate() - 1);
-
-  const isYesterday = date.toDateString() === yesterday.toDateString();
-
-  if (isToday) return "Today";
-
-  if (isYesterday) return "Yesterday";
-
-  const diffDays = Math.floor((today - date) / (1000 * 60 * 60 * 24));
-
-  if (diffDays < 7) {
-    return date.toLocaleDateString("en-US", {
-      weekday: "long",
-    }); 
-  }
-
-  return date.toLocaleDateString("en-GB"); 
-}
 
 const CallHistory = () => {
   const { callHistory,setCallHistory,fetchCallHistoryAgain,setfetchCallHistoryAgain } = useContext(chatContext);

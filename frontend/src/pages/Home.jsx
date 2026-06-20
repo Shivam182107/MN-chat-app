@@ -15,6 +15,7 @@ import { authContext } from "../context/AuthContext";
 import Navabar from "../component/Navabar";
 import UserList from "../component/UserList";
 import api from "../api/axiosInterceptor";
+import HomeSkeleton from "./HomeSkeleton";
 
 
 const CreateGroup = lazy(() => import("../component/CreateGroup"));
@@ -39,7 +40,8 @@ const Home = () => {
     setGroupName,
     isGroupChatProfileOpen,
     Notification,
-    setCallHistory
+    setCallHistory,
+    callHistory
   } = useContext(chatContext);
   const [isOpenSearchUserModal, setisOpenSearchUserModal] = useState(false);
   const [searchInputValue, setsearchInputValue] = useState("");
@@ -142,6 +144,7 @@ const Home = () => {
               size={25}
               onClick={() => {
                 setisCallHistoryOpen((prev) => !prev);
+                if(callHistory)return;
                 getCallHistoryOnBtnClick();
               }}
               className="hover:cursor-pointer"
@@ -149,7 +152,7 @@ const Home = () => {
           </div>
 
           {/* Chat List */}
-          <Suspense fallback={null}>
+          <Suspense fallback={<HomeSkeleton/>}>
             {isCallHistoryOpen ? (
               <CallHistory />
             ) : isProfileActive ? (
@@ -243,7 +246,7 @@ const Home = () => {
         </div>
       </div>
 
-      <Suspense fallback={null}>
+      <Suspense fallback={<HomeSkeleton/>}>
         <CallModal />
       </Suspense>
     </>
