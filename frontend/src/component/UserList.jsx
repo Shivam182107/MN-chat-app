@@ -1,81 +1,138 @@
-import React, { useContext, useEffect } from "react";
+import React, { useContext, useEffect, useMemo, useCallback, memo } from "react";
 import { chatContext } from "../context/ChatContext";
 import { authContext } from "../context/AuthContext";
 import api from "../api/axiosInterceptor";
-import { getOrMakeChat, getSenderDetails } from "../config/ChatLogic";
+import { formatDateLabel, getOrMakeChat, getSenderDetails } from "../config/ChatLogic";
 import { motion } from "framer-motion";
 
+ const  ChatItems=memo(({ val, User, isGroupsOpen, isHavingNotification, notifCount, latestNotifDate, selectedChat, onChatClick })=>{
+      const senderUserDetails =useMemo(()=>{
+      return getSenderDetails(User, val.users, val.isGroupChat)
+    },[User, val.users, val.isGroupChat]);
+
+     return (
+    <div
+      key={val._id}
+      className={`p-3 flex rounded-2xl items-center hover:bg-[#2E2F2F] ${selectedChat?._id===val._id?"bg-[#2E2F2F]":"bg-[#161717]"}  cursor-pointer transition ${isGroupsOpen && !val.isGroupChat ? "hidden" : ""}`}
+      onClick={() => onChatClick(val, senderUserDetails)}
+    >
+      <div
+        className="rounded-[50%] w-12 flex items-center"
+        style={{ border: !val.groupPic && val.isGroupChat ? "1px solid black" : "" }}
+      >
+        <img
+          src={val.isGroupChat ? val.groupPic || "/GroupDefaultImage.png" : senderUserDetails?.pic}
+          alt=""
+          loading='lazy'
+          className="w-full rounded-[50%]"
+        />
+      </div>
+
+      <div className="w-full pl-2 flex flex-col justify-center">
+        <p>{val.isGroupChat ? val.chatName : senderUserDetails?.fullname?.firstname}</p>
+        <p className="text-[#ABACAC]">{val.latestMessage?.content || ""}</p>
+      </div>
+
+      {isHavingNotification && (
+        <div className="flex flex-col items-end justify-center gap-1">
+          <p className="text-[#5DC164] font-bold text-xs">{latestNotifDate}</p>
+          <span className="bg-[#5DC164] font-bold text-black text-[11px] min-w-[18px] h-[18px] flex items-center justify-center rounded-full px-1">
+            {notifCount}
+          </span>
+        </div>
+      )}
+    </div>
+  );
+});
 const UserList = ({ isGroupsOpen }) => {
   const {
-    chatDetails,
-    setchatDetails,
-    setselectedChat,
-    fetchChatAgain,
-    setfetchChatAgain,
-    Notification,
-    setNotification,
-   
+    chatDetails, setchatDetails,
+    selectedChat, setselectedChat,
+    fetchChatAgain, setfetchChatAgain,
+    Notification, setNotification,
   } = useContext(chatContext);
   const { User } = useContext(authContext);
 
+  //get  all chats of the  user  
   async function fetchChatList() {
     try {
-      // if (chatDetails) return;
       if (!chatDetails || fetchChatAgain) {
         const { data } = await api.get("/chat");
-        // console.log("Fetching userlist ");
-        // console.log(data);
         setchatDetails(data);
         setfetchChatAgain(false);
       }
     } catch (e) {
-      console.log(e);
       console.log(e.message);
     }
   }
+
   useEffect(() => {
     if (!fetchChatAgain) return;
     fetchChatList();
   }, [User, fetchChatAgain]);
+  
+  //notification sync  with chat 
   useEffect(() => {
     if (Notification.length === 0) return;
-    if (Notification.length > 0) {
-      setchatDetails((prev) => {
-        const uniqueNotifications = new Set();
-        const latestAndUniqueMsg = Notification.filter((val) => {
-          if (uniqueNotifications.has(val.chat._id)) return false;
-          uniqueNotifications.add(val.chat._id);
-          return true;
-        });
-       
-        //convert into chat
-        const notificationChats = latestAndUniqueMsg.map((val) => ({
-          ...val.chat,
-          latestMessage: {
-            _id: val._id,
-            content: val.content,
-            createdAt: val.createdAt,
-            sender: val.sender,
-          },
-        }));
-        const arr = [...prev];
-        // remove duplicates from fetched data
-        const filteredChats = arr.filter(
-          (chat) =>
-            !notificationChats.some((notifChat) => notifChat._id === chat._id),
-        );
-
-        // notifications first, then remaining chats amd mergerd here
-       
-        return [...notificationChats, ...filteredChats];
+    setchatDetails((prev) => {
+      const uniqueNotifications = new Set();
+      const latestAndUniqueMsg = Notification.filter((val) => {
+        if (uniqueNotifications.has(val.chat._id)) return false;
+        uniqueNotifications.add(val.chat._id);
+        return true;
       });
-    }
+      const notificationChats = latestAndUniqueMsg.map((val) => ({
+        ...val.chat,
+        latestMessage: {
+          _id: val._id,
+          content: val.content,
+          createdAt: val.createdAt,
+          sender: val.sender,
+        },
+      }));
+      const filteredChats = prev.filter(
+        (chat) => !notificationChats.some((n) => n._id === chat._id)
+      );
+      return [...notificationChats, ...filteredChats];
+    });
   }, [Notification]);
-  if (chatDetails && chatDetails.length === 0) {
+
+  const notificationMap=useMemo(()=>{
+    const map={};
+    Notification.forEach((val)=>{
+      const chatid=val.chat._id;
+      if(!map[chatid])map[chatid]={ count: 0, date: val.createdAt };
+      map[chatid].count+=1;
+    })
+    return map; 
+  },[Notification]);
+
+  //memoize the delete notification function 
+  const handleDeleteNotification =useCallback(async (chatid) => {
+    try {
+      const response = await api.delete(`/notification/${chatid}`);
+      if (response.status === 200) {
+        setNotification((prev) => prev.filter((item) => item.chat._id !== chatid));
+      }
+    } catch (error) {
+      console.log("Notification deletion failed:", error);
+    }
+  },[setNotification]);
+
+  //also memoize the handleclick function 
+  const handleChatClick =useCallback(async(val, senderUserDetails)=>{
+if (selectedChat?._id === val._id) return;
+    if (notificationMap[val._id]) {
+      handleDeleteNotification(val._id);
+    }
+    getOrMakeChat(senderUserDetails?._id, val.isGroupChat, val, setselectedChat, chatDetails);
+
+  },[selectedChat, notificationMap, chatDetails, setselectedChat]);
+
+   if (chatDetails && chatDetails.length === 0) {
     return (
       <motion.div
-        className="p-4 bg-[#161717] flex flex-col justify-center rounded-lg items-center 
-              transition-all duration-300 "
+        className="p-4 bg-[#161717] flex flex-col justify-center rounded-lg items-center transition-all duration-300"
         initial={{ opacity: 0, y: 20, scale: 0.98 }}
         animate={{ opacity: 1, y: 0, scale: 1 }}
         transition={{ duration: 0.5, ease: "easeOut" }}
@@ -89,7 +146,6 @@ const UserList = ({ isGroupsOpen }) => {
           Search users by <span className="font-semibold">name</span> or{" "}
           <span className="font-semibold">email</span> and start a conversation.
         </motion.h1>
-
         <motion.h1
           className="text-center mt-2 ml-4 text-gray-600"
           initial={{ opacity: 0, y: 10 }}
@@ -101,109 +157,27 @@ const UserList = ({ isGroupsOpen }) => {
       </motion.div>
     );
   }
-  //  console.log("userlist rendering ......")
-  // console.log( "in the usrelist",chatDetails)
-
-  async function handleDeleteNotification(chatid) {
-    try {
-      const response = await api.delete(`/notification/${chatid}`);
-    if (response.status === 200) {
-      setNotification((prev) => {
-        return prev.filter((item) => item.chat._id != chatid);
-      });
-    }
-    } catch (error) {
-      console.log("Notification deletion failed :",error);
-    }
-    
-  }
+  
   return (
-    <>
-      <div className="flex-1 overflow-y-auto space-y-2 pr-2 custom-scrollbar  pb-28 pl-2 w-full ">
-        {chatDetails &&
-          chatDetails.map((val, idx) => {
-            let senderUserDetails = getSenderDetails(
-              User,
-              val.users,
-              val.isGroupChat,
-            );
-            let isHavingNotification = Notification.some(
-              (item) => item.chat._id === val._id,
-            );
-            return (
-              <div
-                key={idx}
-                className={`p-3 bg-[#161717] flex rounded items-center hover:bg-[#2E2F2F] cursor-pointer transition ${isGroupsOpen && !val.isGroupChat ? "hidden" : ""}`}
-                onClick={() => {
-                  if (Notification.length > 0) {
-                    if (isHavingNotification) {
-                     handleDeleteNotification(val._id)
-                    }
-                  }
-                  //make or get chat  function
-                  getOrMakeChat(
-                    senderUserDetails?._id,
-                    val.isGroupChat,
-                    val,
-                    setselectedChat,
-                  );
-                }}
-              >
-                {/* image div  */}
-                <div
-                  className="rounded-[50%] w-12 flex items-center  "
-                  style={{
-                    border:
-                      !val.groupPic && val.isGroupChat ? "1px solid black" : "",
-                  }}
-                >
-                  <img
-                    src={
-                      val.isGroupChat
-                        ? val.groupPic || "/GroupDefaultImage.png"
-                        : getSenderDetails(User, val.users, val.isGroupChat)
-                            ?.pic
-                    }
-                    alt=""
-                    className="w-full rounded-[50%] "
-                  />
-                </div>
-                {/* image div  */}
+    <div className="flex-1 overflow-y-auto space-y-2 pr-2 custom-scrollbar pb-28 pl-2 w-full">
+      {chatDetails && chatDetails.map((val) => {
+        const notifData = notificationMap[val._id];
+        return (
+          <ChatItems
+            key={val._id}                              
+            val={val}
+            User={User}
+            isGroupsOpen={isGroupsOpen}
+            isHavingNotification={!!notifData}
+            notifCount={notifData?.count || 0}
+            latestNotifDate={notifData ? formatDateLabel(notifData.date): ""}
+            selectedChat={selectedChat}
+            onChatClick={handleChatClick}
+          />
+        );
+      })}
+    </div>
+  )
+}
 
-                <div className=" w-full pl-2 flex flex-col justify-center ">
-                  <p>
-                    {val.isGroupChat
-                      ? val.chatName
-                      : senderUserDetails?.fullname?.firstname}
-                  </p>
-                  <p className="text-[#ABACAC]">
-                    {val.latestMessage?.content || ""}
-                  </p>
-                </div>
-                {Notification.length > 0 && isHavingNotification && (
-                  <div className="flex flex-col items-end justify-center gap-1">
-                    {/* Date */}
-                    <p className="text-[#5DC164] font-bold text-xs">
-                      {new Date(
-                        val.latestMessage?.createdAt,
-                      ).toLocaleDateString()}
-                    </p>
-
-                    {/* Badge */}
-                    <span className="bg-[#5DC164] font-bold text-black text-[11px] min-w-[18px] h-[18px] flex items-center justify-center rounded-full px-1">
-                      {
-                        Notification.filter((item) => item.chat._id === val._id)
-                          .length
-                      }
-                    </span>
-                  </div>
-                )}
-              </div>
-            );
-          })}
-      </div>
-    </>
-  );
-};
-
-export default UserList;
+export default UserList

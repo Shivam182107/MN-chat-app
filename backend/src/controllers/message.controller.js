@@ -16,35 +16,31 @@ module.exports.sendMessage = async (req, res) => {
       content,
       chat: chatId,
     };
-    let createdMessage = await messageModel.create(newMessage);
-    createdMessage = await createdMessage.populate(
-      "sender",
-      "fullname pic email",
-    );
-    createdMessage = await createdMessage.populate("chat");
-    createdMessage = await user.populate(createdMessage, {
-      path: "chat.users",
-      select: "fullname pic email",
-    });
-    const updateReferencedChat = await chatModel.findByIdAndUpdate(
-      { _id: chatId },
-      { latestMessage: createdMessage._id },
-    );
+    let createdMessage = await messageModel
+      .create(newMessage)
+     
+      createdMessage=await createdMessage.populate([
+        {path:"sender",select:"fullname email pic"},
+        {path:"chat",populate:{path:"users",select:"fullname email pic"}}
+      ])
 
-    //create notification  for each user which are associated with this chat
-    await Promise.all(
-      createdMessage.chat.users
-        .filter((val) => val._id.toString() != createdMessage.sender._id.toString())
-        .map((val) => {
-          return notificationModel.create({
-            senderid: createdMessage.sender._id,
-            receiverid: val._id,
-            messageid: createdMessage._id,
-            chatid: createdMessage.chat._id,
-          });
-        }),
-    );
     res.status(200).json(createdMessage);
+
+    const receivers = createdMessage.chat.users.filter(
+      (val) => val._id.toString() !== createdMessage.sender._id.toString()
+    );
+    //paralaly update teh latest message of the respected chat and also create the notification for the associated users in that chat 
+     Promise.all([
+      chatModel.findByIdAndUpdate(chatId, { latestMessage: createdMessage._id }),
+      notificationModel.insertMany(
+        receivers.map((val) => ({
+          senderid: createdMessage.sender._id,
+          receiverid: val._id,
+          messageid: createdMessage._id,
+          chatid: createdMessage.chat._id,
+        }))
+      ),
+    ]).catch((e) => console.log("post-send side effects failed:", e.message));
   } catch (e) {
     console.log(e);
     console.log(e.message);
@@ -67,7 +63,6 @@ module.exports.allMessages = async (req, res) => {
     console.log(e);
     console.log(e.emssage);
     res.status(500).json({
-      // ✅ Send error response
       error: e.message,
     });
   }
@@ -91,7 +86,6 @@ module.exports.setReadBy = async (req, res) => {
     console.log(e);
     console.log(e.emssage);
     res.status(500).json({
-      // ✅ Send error response
       error: e.message,
     });
   }

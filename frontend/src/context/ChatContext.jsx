@@ -24,7 +24,7 @@ const ChatContext = ({ children }) => {
   // ── CALL STATE (new) ──────────
   const [callState, setCallState] = useState("idle");
   const [incomingCall, setIncomingCall] = useState(null);
-  const [callHistory, setCallHistory] = useState([]);
+  const [callHistory, setCallHistory] = useState(null);
   const [fetchCallHistoryAgain,setfetchCallHistoryAgain]=useState(false);
 
   const startCallRef = useRef(null);
