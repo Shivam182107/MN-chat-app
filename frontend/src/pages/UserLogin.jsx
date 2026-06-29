@@ -72,7 +72,7 @@ const UserLogin = () => {
             <div className="relative w-full max-w-[500px]">
               <img
                 // src="https://cn-geo1.uber.com/image-proc/crop/resizecrop/udam/format=auto/width=576/height=576/srcb64=aHR0cHM6Ly90Yi1zdGF0aWMudWJlci5jb20vcHJvZC91ZGFtLWFzc2V0cy85NjRkZDNkMS05NGU3LTQ4MWUtYjI4Yy0wOGQ1OTM1M2I5ZTAucG5n"
-                src="/ChatauthImage.png"
+                src="/ChatauthImagecompressed.png"
                 alt="login"
                 className="w-full rounded-lg"
                 
