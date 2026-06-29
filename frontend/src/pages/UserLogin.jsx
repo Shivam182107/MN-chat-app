@@ -75,9 +75,9 @@ const UserLogin = () => {
                 src="/ChatauthImage.png"
                 alt="login"
                 className="w-full rounded-lg"
-                loading="lazy"
+                
               />
-              <div className="absolute inset-0 bg-gradient-to-t from-black/90 via-black/20 to-transparent rounded-lg"></div>
+              <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-black/20 to-transparent rounded-lg"></div>
               <div className="absolute bottom-0 text-white p-6">
                 <h1 className="text-xl sm:text-2xl font-semibold leading-snug">
                   Welcome User One Step to join 80M family
