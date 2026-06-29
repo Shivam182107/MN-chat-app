@@ -10,6 +10,7 @@ import { chatContext } from "../context/ChatContext";
 import toast from "react-hot-toast";
 import { useEffect } from "react";
 
+
 const UserLogin = () => {
   const navigate = useNavigate();
   const {
@@ -61,7 +62,7 @@ const UserLogin = () => {
         transition={{ duration: 0.6 }}
       >
         <div className="max-w-7xl mx-auto w-full flex md:flex-row flex-col">
-          {/* LEFT IMAGE */}
+          
           <motion.div
             className="flex-1 flex justify-center items-center p-6"
             initial={{ x: -30, opacity: 0 }}
@@ -70,9 +71,11 @@ const UserLogin = () => {
           >
             <div className="relative w-full max-w-[500px]">
               <img
-                src="https://cn-geo1.uber.com/image-proc/crop/resizecrop/udam/format=auto/width=576/height=576/srcb64=aHR0cHM6Ly90Yi1zdGF0aWMudWJlci5jb20vcHJvZC91ZGFtLWFzc2V0cy85NjRkZDNkMS05NGU3LTQ4MWUtYjI4Yy0wOGQ1OTM1M2I5ZTAucG5n"
+                // src="https://cn-geo1.uber.com/image-proc/crop/resizecrop/udam/format=auto/width=576/height=576/srcb64=aHR0cHM6Ly90Yi1zdGF0aWMudWJlci5jb20vcHJvZC91ZGFtLWFzc2V0cy85NjRkZDNkMS05NGU3LTQ4MWUtYjI4Yy0wOGQ1OTM1M2I5ZTAucG5n"
+                src="/ChatauthImage.png"
                 alt="login"
                 className="w-full rounded-lg"
+                loading="lazy"
               />
               <div className="absolute inset-0 bg-gradient-to-t from-black/90 via-black/20 to-transparent rounded-lg"></div>
               <div className="absolute bottom-0 text-white p-6">
@@ -84,7 +87,7 @@ const UserLogin = () => {
             </div>
           </motion.div>
 
-          {/* RIGHT FORM */}
+          
           <motion.div
             className="flex-1 flex flex-col justify-center px-6 sm:px-10 md:px-12 py-10"
             initial={{ x: 30, opacity: 0 }}
@@ -99,7 +102,7 @@ const UserLogin = () => {
               className="flex flex-col max-w-md mx-auto w-full"
               onSubmit={handleSubmit(FormSubmit)}
             >
-              {/* Email */}
+              
               <div className="mb-5">
                 <label htmlFor="email" className="font-medium">
                   Enter your email:
@@ -113,7 +116,7 @@ const UserLogin = () => {
                 <p className="text-red-600">{errors.email?.message}</p>
               </div>
 
-              {/* Password */}
+              
               <div className="mb-6">
                 <label htmlFor="password" className="font-medium">
                   Enter your password:
@@ -138,17 +141,17 @@ const UserLogin = () => {
               </button>
 
               <p className="text-center flex justify-center gap-2 mt-4 mb-6 flex-wrap">
-                <Link to="/user/register" className="text-black underline">
+                <p  className="text-black ">
+                  Don't have an account?
+                </p>
+                <Link to="/user/register" className="text-blue-600 underline">
                   Create new account
-                </Link>
-                <Link to="/user/register" className="text-blue-600">
-                  Forgotten password?
                 </Link>
               </p>
 
               <div className="border border-black mb-6 relative after:content-['or'] after:absolute after:bg-white after:px-2 after:left-1/2 after:top-1/2 after:-translate-x-1/2 after:-translate-y-1/2"></div>
 
-              {/* Google Login */}
+              
               <button
                 type="button"
                 onClick={handleGoogleLogin}
