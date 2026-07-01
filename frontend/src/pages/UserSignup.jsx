@@ -45,7 +45,7 @@ const UserSignup = () => {
   return (
     <>
       <motion.div
-        className="min-h-screen w-full flex items-center"
+        className="min-h-screen w-full flex items-center bg-black text-white"
         initial={{ opacity: 0 }}
         animate={{ opacity: 1 }}
         transition={{ duration: 0.6 }}
@@ -63,10 +63,10 @@ const UserSignup = () => {
                 // src="https://cn-geo1.uber.com/image-proc/crop/resizecrop/udam/format=auto/width=576/height=576/srcb64=aHR0cHM6Ly90Yi1zdGF0aWMudWJlci5jb20vcHJvZC91ZGFtLWFzc2V0cy85NjRkZDNkMS05NGU3LTQ4MWUtYjI4Yy0wOGQ1OTM1M2I5ZTAucG5n"
                 src="/ChatauthImagecompressed.png"
                 alt="signup"
-                className="w-full rounded-lg"
+                className="w-full rounded-lg border-1 border-black"
                 
               />
-              <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-black/20 to-transparent rounded-lg"></div>
+              <div className="absolute inset-0 bg-gradient-to-t from-black/90 via-black/2 to-transparent rounded-lg"></div>
               <div className="absolute bottom-0 text-white p-6">
                 <h1 className="text-xl sm:text-2xl font-semibold leading-snug">
                   Welcome User One Step to join 80M family
@@ -96,7 +96,7 @@ const UserSignup = () => {
                   <label className="font-medium">Enter your firstname:</label>
                   <input
                     type="text"
-                    className="mt-2 h-12 w-full bg-[#eeeeee] px-3 rounded-lg"
+                    className="mt-2 h-12 w-full bg-white/10 px-3 rounded-lg"
                     {...register("fullname.firstname", {
                       required: "This field is required",
                     })}
@@ -109,7 +109,7 @@ const UserSignup = () => {
                   <label className="font-medium">Enter your lastname:</label>
                   <input
                     type="text"
-                    className="mt-2 h-12 w-full bg-[#eeeeee] px-3 rounded-lg"
+                    className="mt-2 h-12 w-full bg-white/10 px-3 rounded-lg"
                     {...register("fullname.lastname", {
                       required: "This field is required",
                     })}
@@ -127,7 +127,7 @@ const UserSignup = () => {
                 <input
                   type="email"
                   id="email"
-                  className="mt-2 h-12 w-full bg-[#eeeeee] px-3 rounded-lg"
+                  className="mt-2 h-12 w-full bg-white/10 px-3 rounded-lg"
                   {...register("email", { required: "This field is required" })}
                 />
                 <p className="text-red-600">{errors.email?.message}</p>
@@ -140,7 +140,7 @@ const UserSignup = () => {
                 <input
                   type="password"
                   id="password"
-                  className="mt-2 h-12 w-full bg-[#eeeeee] px-3 rounded-lg"
+                  className="mt-2 h-12 w-full bg-white/10 px-3 rounded-lg"
                   {...register("password", {
                     required: "This field is required",
                     minLength: {
@@ -152,24 +152,24 @@ const UserSignup = () => {
                 <p className="text-red-600">{errors.password?.message}</p>
               </div>
 
-              <button className="hover:cursor-pointer w-full py-3 rounded-lg bg-black text-white font-medium hover:opacity-90 transition">
+              <button className="hover:cursor-pointer w-full py-3 rounded-lg bg-white text-black font-medium hover:opacity-90 transition">
                 Sign up
               </button>
 
-              <p className="text-center flex justify-center gap-2 mt-4 mb-6 flex-wrap">
+              <p className="text-center flex justify-center gap-2 mt-4 mb-6 flex-wrap text-white">
                 Already have an account?
                 <Link to="/user/login" className="text-blue-600">
                   Login here
                 </Link>
               </p>
 
-              <div className="border border-black mb-6 relative after:content-['or'] after:absolute after:bg-white after:px-2 after:left-1/2 after:top-1/2 after:-translate-x-1/2 after:-translate-y-1/2"></div>
+              <div className="border border-[#282828] mb-6 relative after:content-['or'] after:absolute after:bg-black after:px-2 after:left-1/2 after:top-1/2 after:-translate-x-1/2 after:-translate-y-1/2"></div>
 
               {/* Google Signup */}
               <button
                 type="button"
                 onClick={handleGoogleLogin}
-                className="w-full hover:cursor-pointer py-3 rounded-lg border flex justify-center items-center gap-2 hover:bg-black hover:text-white transition"
+                className="w-full hover:cursor-pointer py-3 rounded-lg border-1 border-[#282828] flex justify-center items-center gap-2 hover:bg-white hover:text-black transition"
               >
                 <FaGoogle size={16} />
                 Continue with Google
