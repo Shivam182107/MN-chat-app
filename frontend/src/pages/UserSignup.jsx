@@ -44,13 +44,14 @@ const UserSignup = () => {
 
   return (
     <>
-      <motion.div
+      <div
         className="min-h-screen w-full flex items-center bg-black text-white"
+      >
+        <motion.div className="max-w-7xl mx-auto w-full flex md:flex-row flex-col"
         initial={{ opacity: 0 }}
         animate={{ opacity: 1 }}
         transition={{ duration: 0.6 }}
-      >
-        <div className="max-w-7xl mx-auto w-full flex md:flex-row flex-col">
+        >
           {/* LEFT IMAGE */}
           <motion.div
             className="flex-1 flex justify-center items-center p-6"
@@ -176,8 +177,8 @@ const UserSignup = () => {
               </button>
             </form>
           </motion.div>
-        </div>
-      </motion.div>
+        </motion.div>
+      </div>
     </>
   );
 };
