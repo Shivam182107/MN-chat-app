@@ -24,8 +24,8 @@ const ChatContext = ({ children }) => {
   // ── CALL STATE (new) ──────────
   const [callState, setCallState] = useState("idle");
   const [incomingCall, setIncomingCall] = useState(null);
-  const [callHistory, setCallHistory] = useState(null);
-  const [fetchCallHistoryAgain,setfetchCallHistoryAgain]=useState(false);
+  const [callHistory, setCallHistory] = useState([]);
+  const [fetchCallHistoryAgain, setfetchCallHistoryAgain] = useState(false);
 
   const startCallRef = useRef(null);
   function startCall(withVideo, receiverId, callerData) {
@@ -99,48 +99,49 @@ const ChatContext = ({ children }) => {
       setCallState("incoming");
     };
     // missed calls delivered on connect
-    const handleMissedCalls = (calls) => {
-      setCallHistory((prev) => [
-        ...calls.map((c) => ({
-          id: Date.now() + Math.random(),
-          type: "incoming",
-          status: "missed",
-          remoteId: c.callerId,
-          timestamp: c.timestamp,
-          duration: null,
-        })),
-        ...prev,
-      ]);
+    const handleCallHistoryUpdate = () => {
+      setfetchCallHistoryAgain(true);
     };
     socketRef.current.on("incomming-call", handleIncomingCall);
-    socketRef.current.on("missed-calls", handleMissedCalls);
+    socketRef.current.on("call-history-update", handleCallHistoryUpdate);
     return () => {
       socketRef.current.off("incomming-call", handleIncomingCall);
-      socketRef.current.off("missed-calls", handleMissedCalls);
+      socketRef.current.off("call-history-update", handleCallHistoryUpdate);
     };
   }, [isScoketConnected]);
-
-  
- 
 
   return (
     <chatContext.Provider
       value={{
-        chatDetails,setchatDetails,
-        selectedChat,setselectedChat,
-        fetchChatAgain,setfetchChatAgain,
-        groupMemberList,setgroupMemberList,
+        chatDetails,
+        setchatDetails,
+        selectedChat,
+        setselectedChat,
+        fetchChatAgain,
+        setfetchChatAgain,
+        groupMemberList,
+        setgroupMemberList,
         groupMemberArray,
-        selectedGroupMember,setselectedGroupMember,
-        GroupName,setGroupName,
-        isGroupChatProfileOpen,setisGroupChatProfileOpen,
-        UserMessages,setUserMessages,
-        Notification,setNotification,
-        callState,setCallState,
-        incomingCall,setIncomingCall,
-        callHistory,setCallHistory,
-        startCall,startCallRef,
-        fetchCallHistoryAgain,setfetchCallHistoryAgain
+        selectedGroupMember,
+        setselectedGroupMember,
+        GroupName,
+        setGroupName,
+        isGroupChatProfileOpen,
+        setisGroupChatProfileOpen,
+        UserMessages,
+        setUserMessages,
+        Notification,
+        setNotification,
+        callState,
+        setCallState,
+        incomingCall,
+        setIncomingCall,
+        callHistory,
+        setCallHistory,
+        startCall,
+        startCallRef,
+        fetchCallHistoryAgain,
+        setfetchCallHistoryAgain,
       }}
     >
       {children}

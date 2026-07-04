@@ -9,7 +9,9 @@ module.exports.getAllHistory = async (req, res) => {
     }
     const history = await callHistoryModel
       .find({ $or: [{ callerid: req.user._id }, { receiverid: req.user._id }] })
-      .populate("callerid", "fullname pic");
+      .populate("callerid", "fullname pic")
+      .populate("receiverid", "fullname pic")
+      .sort({ createdAt: -1 });
     return res.status(200).json({
       history,
     });
