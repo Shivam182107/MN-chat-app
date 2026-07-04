@@ -5,9 +5,7 @@ import { chatContext } from "../context/ChatContext";
 import { useEffect } from "react";
 import api from "../api/axiosInterceptor";
 import { formatDateLabel, formatDuration } from "../config/ChatLogic";
-
-
-
+import { authContext } from "../context/AuthContext";
 
 const statusColor = {
   answered: "text-[#5DC164]",
@@ -17,26 +15,29 @@ const statusColor = {
 };
 
 const CallHistory = () => {
-  const { callHistory,setCallHistory,fetchCallHistoryAgain,setfetchCallHistoryAgain } = useContext(chatContext);
+  const {
+    callHistory,
+    setCallHistory,
+    fetchCallHistoryAgain,
+    setfetchCallHistoryAgain,
+  } = useContext(chatContext);
+  const { User } = useContext(authContext);
 
-  async function getCallHistory(){
-    
+  async function getCallHistory() {
     try {
-
-      const History=await api.get("/history")
-      if(History.status===200){
-        setCallHistory(History.data.history)
+      const History = await api.get("/history");
+      if (History.status === 200) {
+        setCallHistory(History.data.history);
       }
       setfetchCallHistoryAgain(false);
-      
     } catch (error) {
       console.log("Failed to fetch on mount:", error);
     }
-}
-  useEffect(()=>{
-  if(!fetchCallHistoryAgain)return;
-   getCallHistory()
-  },[fetchCallHistoryAgain])
+  }
+  useEffect(() => {
+    if (!fetchCallHistoryAgain) return;
+    getCallHistory();
+  }, [fetchCallHistoryAgain]);
 
   return (
     <>
@@ -57,7 +58,7 @@ const CallHistory = () => {
               </h3>
 
               <h4 className="text-center mt-2 text-gray-500 text-sm">
-                Start a call and your history will appear here 
+                Start a call and your history will appear here
               </h4>
 
               <p className="text-center mt-1 text-gray-600 text-xs">
@@ -67,22 +68,39 @@ const CallHistory = () => {
           )}
           {callHistory.length > 0 &&
             callHistory.map((item) => {
-              const isOutgoing = item.Type === "outgoing";
+              const isOutgoing = item.callerid._id === User._id;
 
               const name = isOutgoing
                 ? item.receiverid?.fullname?.firstname
                 : item.callerid?.fullname?.firstname;
-
+              const pic =isOutgoing
+                ? item.receiverid?.pic
+                : item.callerid?.pic;
               return (
                 <div
                   key={item._id}
                   className="p-3 bg-[#161717] flex rounded items-center hover:bg-[#2E2F2F] cursor-pointer transition"
                 >
                   {/* Avatar */}
-                  <div className="rounded-full w-12 h-12 bg-[#2E2F2F] flex items-center justify-center flex-shrink-0">
-                    <span className="text-sm font-medium">
-                      {name?.[0]?.toUpperCase() || "?"}
-                    </span>
+                  <div
+                    className="rounded-[50%] w-12 flex items-center"
+                    style={{
+                      border:
+                        !item.groupPic && item.isGroupChat
+                          ? "1px solid black"
+                          : "",
+                    }}
+                  >
+                    <img
+                      src={
+                        item.isGroupChat
+                          ? item.groupPic || "/GroupDefaultImage.png"
+                          : pic
+                      }
+                      alt=""
+                      loading="lazy"
+                      className="w-full rounded-[50%]"
+                    />
                   </div>
 
                   {/* User Info */}

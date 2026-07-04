@@ -144,7 +144,7 @@ const Home = () => {
               size={25}
               onClick={() => {
                 setisCallHistoryOpen((prev) => !prev);
-                if(callHistory)return;
+                if(callHistory.length>0)return;
                 getCallHistoryOnBtnClick();
               }}
               className="hover:cursor-pointer"

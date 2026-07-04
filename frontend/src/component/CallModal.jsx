@@ -185,48 +185,12 @@ const CallModal = () => {
 
     // remote ended call call receiverid
     socketRef.current.on("call-ended", () => {
-      const duration = callStartTimeRef.current
-        ? Math.round((Date.now() - callStartTimeRef.current) / 1000)
-        : null;
-      
-  if (isCallerRef.current) {
-    
-    addToHistory({
-      callerid: User._id,
-      receiverid: remoteIdRef.current,
-      Type: "outgoing",
-      status: "answered",
-      callType: callWithVideoRef.current ? "video" : "audio",
-      withVideo: callWithVideoRef.current,
-      duration,
-    });
-  } else {
-    
-    addToHistory({
-      callerid: remoteIdRef.current,
-      receiverid: User._id,
-      Type: "incoming",
-      status: "answered",
-      callType: callWithVideoRef.current ? "video" : "audio",
-      withVideo: callWithVideoRef.current,
-      duration,
-    });
-  }
       cleanupCall();
     });
 
     // remote rejected caller side
     socketRef.current.on("call-rejected", () => {
       clearCallTimeout();
-      addToHistory({
-        callerid: User._id,
-        receiverid: remoteIdRef.current,
-        Type: "outgoing",
-        status: "rejected",
-        callType: callWithVideoRef.current ? "video" : "audio",
-        withVideo: callWithVideoRef.current,
-        duration: null,
-      });
       cleanupCall();
     });
     socketRef.current.on("remote-user-muted", (isMute) => {
@@ -336,7 +300,7 @@ const CallModal = () => {
     callWithVideoRef.current = withVideo;
   }
 
-  // ── CANCEL CALL ──────
+  // ── CANCEL CALL ────── //it will handle missed call as well
   function cancelCall(receiverId, timedOut = false) {
     clearCallTimeout();
     socketRef.current.emit("call-cancelled", receiverId, User._id);
@@ -385,7 +349,7 @@ const CallModal = () => {
     setIncomingCall(null);
   }
 
-  // ── REJECT CALL ─────────  call receiver reject call
+  // ── REJECT CALL ─────────  call receiver reject call 'shivam call subrat and subrat click end call button'
   function rejectCall() {
     socketRef.current.emit("reject-call", incomingCall.callerId);
     addToHistory({
@@ -401,7 +365,7 @@ const CallModal = () => {
     setCallState("idle");
   }
 
-  // ── END CALL ─────── caller side
+  // ── END CALL ─────── caller side 'shivam call subrat and shivam click end call button'
   function endCall() {
     const duration = callStartTimeRef.current
       ? Math.round((Date.now() - callStartTimeRef.current) / 1000)
