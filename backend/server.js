@@ -78,6 +78,8 @@ io.on("connection", (socket) => {
   socket.on("remote-mute", (isMute, receiverId) => {
     socket.to(receiverId).emit("remote-user-muted", isMute);
   });
+
+
   socket.on("disconnect", () => {
     if (socket.userId) {
       socket.leave(socket.userId);

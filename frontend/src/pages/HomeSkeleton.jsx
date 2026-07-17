@@ -45,11 +45,13 @@ const HomeSkeleton = () => {
         </div>
 
         {/* Mobile Bottom Nav */}
-        <div className="md:hidden h-24 bg-[#1D1F1F] text-white flex items-center justify-evenly">
-          <BsChatSquareTextFill size={25} className="opacity-60" />
-          <MdGroup size={25} className="opacity-60" />
-          <MdOutlineGroupAdd size={25} className="opacity-60" />
-          <MdCall size={25} className="opacity-60" />
+       <div className="md:w-16 md:h-full md:flex-col md:relative md:justify-evenly
+                        bg-[#1D1F1F] flex items-center py-4
+                        absolute bottom-0 w-full h-24 justify-evenly z-10
+                        md:static md:h-auto">
+          {[...Array(4)].map((_, i) => (
+            <div key={i} className="size-7 rounded-full skeleton shrink-0" />
+          ))}
         </div>
       </div>
 

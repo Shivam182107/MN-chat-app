@@ -7,7 +7,7 @@ import Skeleton from "./Skeleton";
 
 const UserProtectedWrapper = ({ children }) => {
   const { User, setUser } = useContext(authContext);
-  const { setchatDetails, setNotification } = useContext(chatContext);
+  const { setchatDetails, setNotification,setCallHistory,setcallNotification } = useContext(chatContext);
 
   const [isLoading, setisLoading] = useState(true);
   const navigate = useNavigate();
@@ -26,13 +26,19 @@ const UserProtectedWrapper = ({ children }) => {
     const { data } = await api.get("/notification");
     return data.notification;
   }
+  async function getCallHistory(){
+    const {data}=await api.get("/history")
+    return data.history;
+
+  }
 
   async function fetchUserData() {
     try {
-      const [profile, chat, notification] = await Promise.allSettled([
+      const [profile, chat, notification,history] = await Promise.allSettled([
         fetchUserProfile(),
         fetchChatList(),
         getNotification(),
+        getCallHistory()
       ]);
 
       
@@ -53,6 +59,9 @@ const UserProtectedWrapper = ({ children }) => {
         setNotification(
           notification.value.map((item) => item.messageid)
         );
+      }
+      if (history.status === "fulfilled") {
+        setCallHistory(history.value)
       }
 
       setisLoading(false);

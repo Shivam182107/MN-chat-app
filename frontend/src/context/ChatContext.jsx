@@ -2,6 +2,7 @@ import React, {
   createContext,
   useContext,
   useEffect,
+  useMemo,
   useRef,
   useState,
 } from "react";
@@ -20,6 +21,7 @@ const ChatContext = ({ children }) => {
   const [GroupName, setGroupName] = useState(null);
   const [UserMessages, setUserMessages] = useState([]);
   const [Notification, setNotification] = useState([]);
+  const [TrackSection,setTrackSection]=useState("chat");
 
   // ── CALL STATE (new) ──────────
   const [callState, setCallState] = useState("idle");
@@ -102,6 +104,7 @@ const ChatContext = ({ children }) => {
     const handleCallHistoryUpdate = () => {
       setfetchCallHistoryAgain(true);
     };
+
     socketRef.current.on("incomming-call", handleIncomingCall);
     socketRef.current.on("call-history-update", handleCallHistoryUpdate);
     return () => {
@@ -109,6 +112,32 @@ const ChatContext = ({ children }) => {
       socketRef.current.off("call-history-update", handleCallHistoryUpdate);
     };
   }, [isScoketConnected]);
+
+  let callNotification = useMemo(() => {
+    if (callHistory.length === 0) return [];
+    return callHistory.filter((val) => {
+      return (
+        val.receiverid._id === User._id &&
+        (val.status === "no-answer" || val.status === "cancelled") &&
+        !val.isUserVisited
+      );
+    });
+  }, [callHistory]);
+    async function getCallHistory() {
+    try {
+      const History = await api.get("/history");
+      if (History.status === 200) {
+        setCallHistory(History.data.history);
+      }
+      setfetchCallHistoryAgain(false);
+    } catch (error) {
+      console.log("Failed to fetch on mount:", error);
+    }
+  }
+  useEffect(() => {
+    if (!fetchCallHistoryAgain) return;
+    getCallHistory();
+  }, [fetchCallHistoryAgain]);
 
   return (
     <chatContext.Provider
@@ -142,6 +171,8 @@ const ChatContext = ({ children }) => {
         startCallRef,
         fetchCallHistoryAgain,
         setfetchCallHistoryAgain,
+        callNotification,
+        TrackSection,setTrackSection
       }}
     >
       {children}
