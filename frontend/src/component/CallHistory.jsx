@@ -10,36 +10,41 @@ import { authContext } from "../context/AuthContext";
 const statusColor = {
   answered: "text-[#5DC164]",
   rejected: "text-red-500",
-  cancelled: "text-yellow-500",
-  "no-answer": "text-orange-400",
+  cancelled: "text-red-500",
+  "no-answer": "text-red-500",
 };
 
 const CallHistory = () => {
   const {
     callHistory,
     setCallHistory,
-    fetchCallHistoryAgain,
-    setfetchCallHistoryAgain,
+    callNotification,
   } = useContext(chatContext);
   const { User } = useContext(authContext);
 
-  async function getCallHistory() {
+
+
+  //update the callhistory isUserVisited
+  async function updateIsUserVisited() {
     try {
-      const History = await api.get("/history");
-      if (History.status === 200) {
-        setCallHistory(History.data.history);
+      const updateResponse = await api.patch("/history/update");
+      if (updateResponse.status === 200) {
+        setCallHistory((prev) => {
+          return prev.map((val) => {
+            return val.receiverid._id === User._id && !val.isUserVisited
+              ? { ...val, isUserVisited: true }
+              : val;
+          });
+        });
       }
-      setfetchCallHistoryAgain(false);
-    } catch (error) {
-      console.log("Failed to fetch on mount:", error);
-    }
+    } catch (error) {}
   }
   useEffect(() => {
-    if (!fetchCallHistoryAgain) return;
-    getCallHistory();
-  }, [fetchCallHistoryAgain]);
+    if (callNotification.length === 0) return;
+    updateIsUserVisited();
+  }, [callNotification.length]);
 
-  return (
+   return (
     <>
       <div className="md:w-[410px] flex-shrink-0 w-full bg-[#161717] text-white flex flex-col">
         {/* Header */}
@@ -48,7 +53,7 @@ const CallHistory = () => {
         </div>
 
         {/* Call List */}
-        <div className="flex-1 overflow-y-auto space-y-2 pr-2 custom-scrollbar pb-28 pl-2 w-full">
+        <div className="flex-1 overflow-y-auto space-y-2 pr-2 custom-scrollbar pb-28 pl-2 pt-6 w-full">
           {callHistory.length === 0 && (
             <div className="p-4 bg-[#161717] flex flex-col justify-center rounded-lg items-center mt-4">
               <div className="text-4xl mb-2">📞</div>
@@ -73,7 +78,7 @@ const CallHistory = () => {
               const name = isOutgoing
                 ? item.receiverid?.fullname?.firstname
                 : item.callerid?.fullname?.firstname;
-              const pic =isOutgoing
+              const pic = isOutgoing
                 ? item.receiverid?.pic
                 : item.callerid?.pic;
               return (
@@ -105,44 +110,42 @@ const CallHistory = () => {
 
                   {/* User Info */}
                   <div className="w-full pl-2 flex flex-col justify-center overflow-hidden">
-                    <p className="text-sm truncate">{name}</p>
+                    <p
+                      className={`text-sm truncate text-white `}
+                    >
+                      {name}
+                    </p>
 
+                    {/* Row just under the name: icon + created date & time */}
                     <div className="flex items-center gap-1">
                       {isOutgoing ? (
                         <BiSolidPhoneOutgoing
-                          size={13}
+                          size={18}
                           className={statusColor[item.status]}
                         />
                       ) : (
                         <BiSolidPhoneIncoming
-                          size={13}
+                          size={18}
                           className={statusColor[item.status]}
                         />
                       )}
 
-                      <span
-                        className={`text-xs capitalize ${statusColor[item.status]}`}
-                      >
-                        {item.status}
-                      </span>
-
-                      <span className="text-xs text-[#ABACAC]">
-                        • {item.callType}
+                      <span className="text-xs text-[#ABACAC]" >
+                        {formatDateLabel(item.createdAt)},{" "}
+                        {new Date(item.createdAt).toLocaleTimeString("en-US", {
+                          hour: "numeric",
+                          minute: "2-digit",
+                          hour12: true,
+                        })}
                       </span>
                     </div>
                   </div>
 
-                  {/* Right Side */}
-                  <div className="flex flex-col items-end justify-center gap-1">
-                    <p className="text-[#ABACAC] text-xs">
-                      {formatDateLabel(item.createdAt)}
-                    </p>
-
-                    {item.duration && (
-                      <span className="text-[#ABACAC] text-[11px]">
-                        {formatDuration(item.duration)}
-                      </span>
-                    )}
+                  {/* Right Side: call type, vertically centered */}
+                  <div className="flex items-center">
+                    <span className="text-xs capitalize text-[#ABACAC]">
+                      {item.callType}
+                    </span>
                   </div>
                 </div>
               );

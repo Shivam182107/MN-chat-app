@@ -17,7 +17,6 @@ import UserList from "../component/UserList";
 import api from "../api/axiosInterceptor";
 import HomeSkeleton from "./HomeSkeleton";
 
-
 const CreateGroup = lazy(() => import("../component/CreateGroup"));
 const Profile = lazy(() => import("../component/Profile"));
 const CallHistory = lazy(() => import("../component/CallHistory"));
@@ -40,8 +39,10 @@ const Home = () => {
     setGroupName,
     isGroupChatProfileOpen,
     Notification,
-    setCallHistory,
-    callHistory
+    callHistory,
+    callNotification,
+    TrackSection,
+    setTrackSection,
   } = useContext(chatContext);
   const [isOpenSearchUserModal, setisOpenSearchUserModal] = useState(false);
   const [searchInputValue, setsearchInputValue] = useState("");
@@ -86,15 +87,14 @@ const Home = () => {
     };
   }, [User]);
 
-  async function getCallHistoryOnBtnClick(){
-    try {
-
-      const History=await api.get("/history")
-      if(History.status===200){
-        setCallHistory(History.data.history)
-      }
-    } catch (error) {
-      console.log("Failed to fetch on mount:", error);
+  function cleanUpSections() {
+    if (isGroupsOpen) setisGroupsOpen(false);
+    if (GroupCreation) setGroupCreation(false);
+    if (isProfileActive) setisProfileActive(false);
+    if (isCallHistoryOpen) setisCallHistoryOpen(false);
+    if (selectedGroupMember.length > 0) {
+      setselectedGroupMember([]);
+      if (GroupName) setGroupName(null);
     }
   }
 
@@ -108,51 +108,117 @@ const Home = () => {
           <div
             className={`md:w-16 md:h-full bg-[#1D1F1F] text-white flex md:flex-col items-center md:relative py-4 absolute bottom-0 w-full h-24 justify-evenly ${selectedChat ? "hidden md:flex " : "flex"}`}
           >
-            <div className="relative ">
-              {Notification.length > 0 && (
-                <span className="absolute -top-3 -right-3 bg-[#58B960] text-grenn-900 text-xs px-1.5 py-0.5 rounded-full">
-                  {Notification.length}
-                </span>
-              )}
-              <BsChatSquareTextFill
-                size={25}
-                className="cursor-pointer"
-                onClick={() => {
-                  if (isGroupsOpen) setisGroupsOpen(false);
-                  if (GroupCreation) setGroupCreation(false);
-                  if (isProfileActive) setisProfileActive(false);
-                  if (isCallHistoryOpen) setisCallHistoryOpen(false);
-                  if (selectedGroupMember.length > 0) {
-                    setselectedGroupMember([]);
-                    if (GroupName) setGroupName(null);
-                  }
-                  navigate("/");
-                }}
-              />
+            <div className="relative flex flex-col items-center gap-1">
+              <div className="relative">
+                {Notification.length > 0 && (
+                  <span className="absolute -top-3 -right-2 md:-top-3 md:-right-2 bg-[#58B960] z-12 font-bold text-black text-[11px] px-1.5 py-0.5 rounded-full">
+                    {Notification.length}
+                  </span>
+                )}
+                <div
+                  className={`absolute h-8 w-16 md:h-8 md:w-10 md:rounded-full top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 rounded-full bg-[#25D366]/20
+          transition-transform duration-500
+          ease-[cubic-bezier(.25,.8,.25,1)]
+          ${
+            TrackSection === "chat"
+              ? "scale-x-100 scale-y-100 opacity-100"
+              : "scale-x-[0.35] scale-y-[0.85] opacity-0"
+          }`}
+                />
+                <BsChatSquareTextFill
+                  size={20}
+                  className="cursor-pointer relative z-10"
+                  onClick={() => {
+                    if (TrackSection != "chat") setTrackSection("chat");
+                    cleanUpSections();
+                    navigate("/");
+                  }}
+                />
+              </div>
+              <span className="md:hidden">Chats</span>
             </div>
-            <MdGroup
-              size={25}
-              className="cursor-pointer"
-              onClick={() => setisGroupsOpen(true)}
-            />
-            <MdOutlineGroupAdd
-              size={25}
-              onClick={() => setGroupCreation((prev) => !prev)}
-              className="hover:cursor-pointer"
-            />
-            <MdCall
-              size={25}
-              onClick={() => {
-                setisCallHistoryOpen((prev) => !prev);
-                if(callHistory.length>0)return;
-                getCallHistoryOnBtnClick();
-              }}
-              className="hover:cursor-pointer"
-            />
+            <div className="flex flex-col items-center ">
+              <div className="relative">
+                <div
+                  className={`absolute h-8 w-16 w-16 md:h-8 md:w-10 md:rounded-full top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 rounded-full bg-[#25D366]/20
+          transition-transform duration-500
+          ease-[cubic-bezier(.25,.8,.25,1)]
+          ${
+            TrackSection === "groups"
+              ? "scale-x-100 scale-y-100 opacity-100"
+              : "scale-x-[0.35] scale-y-[0.85] opacity-0"
+          }`}
+                />
+                <MdGroup
+                  size={20}
+                  className="cursor-pointer relative z-10"
+                  onClick={() => {
+                    if (TrackSection != "groups") setTrackSection("groups");
+                    cleanUpSections();
+                    setisGroupsOpen(true);
+                  }}
+                />
+              </div>
+              <span className="md:hidden">Groups</span>
+            </div>
+            <div className="flex flex-col items-center ">
+              <div className="relative">
+                <div
+                  className={`absolute h-8 w-16 w-16 md:h-8 md:w-10 md:rounded-full top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 rounded-full bg-[#25D366]/20
+          transition-transform duration-500
+          ease-[cubic-bezier(.25,.8,.25,1)]
+          ${
+            TrackSection === "creategroup"
+              ? "scale-x-100 scale-y-100 opacity-100"
+              : "scale-x-[0.35] scale-y-[0.85] opacity-0"
+          }`}
+                />
+                <MdOutlineGroupAdd
+                  size={20}
+                  onClick={() => {
+                    if (TrackSection != "creategroup")
+                      setTrackSection("creategroup");
+                    cleanUpSections();
+                    setGroupCreation((prev) => !prev);
+                  }}
+                  className="hover:cursor-pointer relative z-10"
+                />
+              </div>
+              <span className="md:hidden">Create Group</span>
+            </div>
+            <div className="relative flex flex-col items-center ">
+              <div className="relative">
+                {callNotification?.length > 0 && (
+                  <span className="absolute -top-3 -right-2 md:-top-3 md:-right-2 bg-[#58B960] font-bold text-black text-[11px] px-1.5 py-0.5 z-12 rounded-full">
+                    {callNotification?.length}
+                  </span>
+                )}
+                <div
+                  className={`absolute h-8 w-16 w-16 md:h-8 md:w-10 md:rounded-full top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 rounded-full bg-[#25D366]/20
+          transition-transform duration-500
+          ease-[cubic-bezier(.25,.8,.25,1)]
+          ${
+            TrackSection === "calls"
+              ? "scale-x-100 scale-y-100 opacity-100"
+              : "scale-x-[0.35] scale-y-[0.85] opacity-0"
+          }`}
+                />
+                <MdCall
+                  size={20}
+                  onClick={() => {
+                    if (TrackSection != "calls") setTrackSection("calls");
+                    cleanUpSections();
+                    setisCallHistoryOpen((prev) => !prev);
+                  }}
+                  className={`hover:cursor-pointer relative z-10 `}
+                />
+              </div>
+              <span className="md:hidden">Calls</span>
+            </div>
           </div>
 
           {/* Chat List */}
-          <Suspense fallback={<HomeSkeleton/>}>
+          <Suspense fallback={<HomeSkeleton />}>
             {isCallHistoryOpen ? (
               <CallHistory />
             ) : isProfileActive ? (
@@ -246,7 +312,7 @@ const Home = () => {
         </div>
       </div>
 
-      <Suspense fallback={<HomeSkeleton/>}>
+      <Suspense fallback={<HomeSkeleton />}>
         <CallModal />
       </Suspense>
     </>

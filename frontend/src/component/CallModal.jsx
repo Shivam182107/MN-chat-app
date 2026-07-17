@@ -44,7 +44,7 @@ const CallModal = () => {
     incomingCall,
     setIncomingCall,
     startCallRef,
-    setfetchCallHistoryAgain
+    setfetchCallHistoryAgain,
   } = useContext(chatContext);
 
   // ──────── WebRTC refs ────────
@@ -101,11 +101,10 @@ const CallModal = () => {
   // ──────── History helper ────
   async function addToHistory(entry) {
     try {
-      const response=await api.post("/history", entry);
-      if(response.status===201){
-        setfetchCallHistoryAgain(true)
+      const response = await api.post("/history", entry);
+      if (response.status === 201) {
+        setfetchCallHistoryAgain(true);
       }
-
     } catch (error) {
       console.log("Failed to save call history:", error);
       // console.log(error)
@@ -143,6 +142,7 @@ const CallModal = () => {
     socketRef.current.on("call-cancelled", () => {
       setIncomingCall(null);
       setCallState("idle");
+     
     });
 
     // our call got answered means call connected
@@ -279,7 +279,7 @@ const CallModal = () => {
   async function initiateCall(withVideo, receiverId, callerData) {
     const stream = await getLocalStream(withVideo);
     if (!stream) return;
-     isCallerRef.current = true; 
+    isCallerRef.current = true;
     setIsAudioOnly(!withVideo);
     setCallState("calling");
     remoteIdRef.current = receiverId;
@@ -301,10 +301,9 @@ const CallModal = () => {
   }
 
   // ── CANCEL CALL ────── //it will handle missed call as well
-  function cancelCall(receiverId, timedOut = false) {
+  async function cancelCall(receiverId, timedOut = false) {
     clearCallTimeout();
-    socketRef.current.emit("call-cancelled", receiverId, User._id);
-    addToHistory({
+    await addToHistory({
       callerid: User._id,
       receiverid: receiverId,
       Type: "outgoing",
@@ -313,6 +312,8 @@ const CallModal = () => {
       withVideo: callWithVideoRef.current,
       duration: null,
     });
+    socketRef.current.emit("call-cancelled", receiverId, User._id);
+
     cleanupCall();
     // if (timedOut) alert("No answer. Call ended automatically.");
   }
@@ -322,7 +323,7 @@ const CallModal = () => {
     if (!incomingCall) return;
     const stream = await getLocalStream(withVideo);
     if (!stream) return;
-    isCallerRef.current = false; 
+    isCallerRef.current = false;
     setIsAudioOnly(!withVideo);
     callStartTimeRef.current = Date.now();
     remoteIdRef.current = incomingCall.callerId;
@@ -371,29 +372,27 @@ const CallModal = () => {
       ? Math.round((Date.now() - callStartTimeRef.current) / 1000)
       : null;
 
-   if (isCallerRef.current) {
-    
-    addToHistory({
-      callerid: User._id,
-      receiverid: remoteIdRef.current,
-      Type: "outgoing",
-      status: "answered",
-      callType: callWithVideoRef.current ? "video" : "audio",
-      withVideo: callWithVideoRef.current,
-      duration,
-    });
-  } else {
-    
-    addToHistory({
-      callerid: remoteIdRef.current,
-      receiverid: User._id,
-      Type: "incoming",
-      status: "answered",
-      callType: callWithVideoRef.current ? "video" : "audio",
-      withVideo: callWithVideoRef.current,
-      duration,
-    });
-  }
+    if (isCallerRef.current) {
+      addToHistory({
+        callerid: User._id,
+        receiverid: remoteIdRef.current,
+        Type: "outgoing",
+        status: "answered",
+        callType: callWithVideoRef.current ? "video" : "audio",
+        withVideo: callWithVideoRef.current,
+        duration,
+      });
+    } else {
+      addToHistory({
+        callerid: remoteIdRef.current,
+        receiverid: User._id,
+        Type: "incoming",
+        status: "answered",
+        callType: callWithVideoRef.current ? "video" : "audio",
+        withVideo: callWithVideoRef.current,
+        duration,
+      });
+    }
     socketRef.current.emit("end-call", remoteIdRef.current);
     cleanupCall();
   }
@@ -418,7 +417,7 @@ const CallModal = () => {
     iceCandidateBuffer.current = [];
     remoteIdRef.current = "";
     callWithVideoRef.current = false;
-    isCallerRef.current = false; 
+    isCallerRef.current = false;
     setCallState("idle");
     setIncomingCall(null);
     setIsMuted(false);

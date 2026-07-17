@@ -4,7 +4,7 @@ import { FaGoogle } from "react-icons/fa";
 import { useForm } from "react-hook-form";
 import { motion } from "framer-motion";
 import api from "../api/axiosInterceptor";
-import { useContext } from "react";
+import { useContext, useState } from "react";
 import { authContext } from "../context/AuthContext";
 import { chatContext } from "../context/ChatContext";
 import toast from "react-hot-toast";
@@ -25,6 +25,7 @@ const UserLogin = () => {
 
   async function FormSubmit(formdata) {
     if (!formdata) return;
+   
     try {
       const loginResponse = await api.post(`/user/login`, formdata);
       if (loginResponse.status === 200) {
@@ -53,6 +54,7 @@ const UserLogin = () => {
       
     }
   },[])
+  // console.log(isatExist);
   return (
     <>
       <div
@@ -112,9 +114,10 @@ const UserLogin = () => {
                   type="email"
                   id="email"
                   className="mt-2 h-12 w-full bg-white/10 px-3 rounded-lg"
-                  {...register("email", { required: "This field is required" })}
+                  {...register("email", { required: "Please enter your email" })}
                 />
                 <p className="text-red-600">{errors.email?.message}</p>
+
               </div>
 
               
@@ -127,7 +130,7 @@ const UserLogin = () => {
                   id="password"
                   className="mt-2 h-12 w-full bg-white/10 px-3 rounded-lg"
                   {...register("password", {
-                    required: "This field is required",
+                    required: "Password is required",
                     minLength: {
                       value: 8,
                       message: "Password must be 8 characters long",
@@ -142,9 +145,9 @@ const UserLogin = () => {
               </button>
 
               <p className="text-center flex justify-center gap-2 mt-4 mb-6 flex-wrap">
-                <p  className="text-white ">
+                <span  className="text-white ">
                   Don't have an account?
-                </p>
+                </span>
                 <Link to="/user/register" className="text-blue-600 underline">
                   Create new account
                 </Link>

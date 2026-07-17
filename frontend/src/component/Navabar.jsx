@@ -42,7 +42,7 @@ const Navabar = ({profileActivate}) => {
             />
           </div>
           {/* mobile responsive */}
-          {isOpen && <div className='absolute md:hidden  top-[100%] bg-black w-full z-4 left-0 flex flex-col '>
+          {isOpen && <div className='absolute md:hidden  top-[100%] bg-black w-full z-12 left-0 flex flex-col '>
 
 
             {!User ? <div className='flex flex-col'><NavLink
