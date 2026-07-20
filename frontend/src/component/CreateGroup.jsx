@@ -9,7 +9,7 @@ import { MdOutlineKeyboardBackspace } from "react-icons/md";
 import api from "../api/axiosInterceptor";
 
 const CreateGroup = ({ removeGroupCreate }) => {
-  const { selectedGroupMember,setselectedGroupMember,GroupName,setGroupName,setselectedChat,setfetchChatAgain } = useContext(chatContext);
+  const { selectedGroupMember,setselectedGroupMember,GroupName,setGroupName,setselectedChat,setfetchChatAgain,setTrackSection } = useContext(chatContext);
   const [isAddMemberClick, setisAddMemberClick] = useState(false);
   const [GroupNameInput,setGroupNameInput]=useState("")
   const [SearchUserInput,setSearchUserInput]=useState("")
@@ -67,6 +67,7 @@ const CreateGroup = ({ removeGroupCreate }) => {
             <RxCross2
               size={20}
               onClick={() => {
+                setTrackSection("chat")
                 removeGroupCreate()
                 if(selectedGroupMember.length>0){
                 setselectedGroupMember([]);

@@ -42,25 +42,31 @@ export async function getOrMakeChat(
     console.log(e.message);
   }
 }
-export async function SearchUserChat(userId, setselectedChat) {
+export async function SearchUserChat(
+  userId,
+  setselectedChat,
+  notificationMap,
+  handleDeleteNotification,
+  
+) {
   // console.log(userId);
   try {
-    if (userId) {
-      const response = await api.post("/chat", { userId });
-      if (response.status === 200) {
-        setselectedChat(response.data);
+    if (!userId) return false;
+    const response = await api.post("/chat", { userId });
+    if (response.status === 200) {
+      if (notificationMap[response.data._id]) {
+        handleDeleteNotification(response.data._id);
       }
-      // console.log("1to1 chat created state upadted ")
+      setselectedChat(response.data);
+      return true;
     }
-    console.log("1to1 chat created ");
+    return false ;
   } catch (e) {
     console.log(e);
     console.log(e.message);
+    return false;
   }
 }
-
-
-
 
 export function formatDuration(sec) {
   if (!sec) return null;
@@ -92,8 +98,8 @@ export function formatDateLabel(dateString) {
   if (diffDays < 7) {
     return date.toLocaleDateString("en-US", {
       weekday: "long",
-    }); 
+    });
   }
 
-  return date.toLocaleDateString("en-GB"); 
+  return date.toLocaleDateString("en-GB");
 }
