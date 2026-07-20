@@ -1,5 +1,6 @@
 import React, {
   createContext,
+  useCallback,
   useContext,
   useEffect,
   useMemo,
@@ -139,6 +140,27 @@ const ChatContext = ({ children }) => {
     getCallHistory();
   }, [fetchCallHistoryAgain]);
 
+    const notificationMap=useMemo(()=>{
+    const map={};
+    Notification.forEach((val)=>{
+      const chatid=val.chat._id;
+      if(!map[chatid])map[chatid]={ count: 0, date: val.createdAt };
+      map[chatid].count+=1;
+    })
+    return map; 
+  },[Notification]);
+
+  //memoize the delete notification function 
+  const handleDeleteNotification =useCallback(async (chatid) => {
+    try {
+      const response = await api.delete(`/notification/${chatid}`);
+      if (response.status === 200) {
+        setNotification((prev) => prev.filter((item) => item.chat._id !== chatid));
+      }
+    } catch (error) {
+      console.log("Notification deletion failed:", error);
+    }
+  },[setNotification]);
   return (
     <chatContext.Provider
       value={{
@@ -172,7 +194,10 @@ const ChatContext = ({ children }) => {
         fetchCallHistoryAgain,
         setfetchCallHistoryAgain,
         callNotification,
-        TrackSection,setTrackSection
+        TrackSection,setTrackSection,
+        notificationMap,
+        handleDeleteNotification
+
       }}
     >
       {children}

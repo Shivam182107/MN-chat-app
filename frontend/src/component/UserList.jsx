@@ -13,7 +13,7 @@ import { motion } from "framer-motion";
      return (
     <div
       key={val._id}
-      className={`p-3 flex rounded-2xl items-center hover:bg-[#2E2F2F] ${selectedChat?._id===val._id?"bg-[#2E2F2F]":"bg-[#161717]"}  cursor-pointer transition ${isGroupsOpen && !val.isGroupChat ? "hidden" : ""}`}
+      className={`p-3 flex rounded-2xl items-center hover:bg-[#2E2F2F] ${selectedChat?._id===val._id?"bg-[#2E2F2F]":"bg-[#161717]"}  cursor-pointer transition ${isGroupsOpen && !val.isGroupChat ? "hidden" : ""} animate-fade-in-up`}
       onClick={() => onChatClick(val, senderUserDetails)}
     >
       <div
@@ -50,6 +50,7 @@ const UserList = ({ isGroupsOpen }) => {
     selectedChat, setselectedChat,
     fetchChatAgain, setfetchChatAgain,
     Notification, setNotification,
+    notificationMap,handleDeleteNotification
   } = useContext(chatContext);
   const { User } = useContext(authContext);
 
@@ -97,27 +98,6 @@ const UserList = ({ isGroupsOpen }) => {
     });
   }, [Notification]);
 
-  const notificationMap=useMemo(()=>{
-    const map={};
-    Notification.forEach((val)=>{
-      const chatid=val.chat._id;
-      if(!map[chatid])map[chatid]={ count: 0, date: val.createdAt };
-      map[chatid].count+=1;
-    })
-    return map; 
-  },[Notification]);
-
-  //memoize the delete notification function 
-  const handleDeleteNotification =useCallback(async (chatid) => {
-    try {
-      const response = await api.delete(`/notification/${chatid}`);
-      if (response.status === 200) {
-        setNotification((prev) => prev.filter((item) => item.chat._id !== chatid));
-      }
-    } catch (error) {
-      console.log("Notification deletion failed:", error);
-    }
-  },[setNotification]);
 
   //also memoize the handleclick function 
   const handleChatClick =useCallback(async(val, senderUserDetails)=>{

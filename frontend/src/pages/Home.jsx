@@ -1,7 +1,7 @@
 import { lazy, Suspense, useEffect, useRef, useState, useContext } from "react";
 import { RiChatNewFill } from "react-icons/ri";
 import { BsCameraVideo, BsThreeDotsVertical } from "react-icons/bs";
-import { FaSearch } from "react-icons/fa";
+import { FaArrowLeft, FaSearch } from "react-icons/fa";
 import { BsChatSquareTextFill } from "react-icons/bs";
 import { MdCall } from "react-icons/md";
 import { MdOutlineGroupAdd } from "react-icons/md";
@@ -16,6 +16,7 @@ import Navabar from "../component/Navabar";
 import UserList from "../component/UserList";
 import api from "../api/axiosInterceptor";
 import HomeSkeleton from "./HomeSkeleton";
+import SearchUserModal from "../component/SearchUserModal";
 
 const CreateGroup = lazy(() => import("../component/CreateGroup"));
 const Profile = lazy(() => import("../component/Profile"));
@@ -23,7 +24,6 @@ const CallHistory = lazy(() => import("../component/CallHistory"));
 const CallModal = lazy(() => import("../component/CallModal"));
 const GroupChatProfile = lazy(() => import("../component/GroupChatProfile"));
 const MessageContainer = lazy(() => import("../component/MessageContainer"));
-const SearchUserModal = lazy(() => import("../component/SearchUserModal"));
 
 const Home = () => {
   const [isPopupOpen, setisPopupOpen] = useState(false);
@@ -65,10 +65,10 @@ const Home = () => {
       return;
     }
     setsearchInputValue(searchRef.current.value);
-    setisOpenSearchUserModal(true);
   }
   function handleInput() {
     setsearchInputValue("");
+    setisOpenSearchUserModal(false);
   }
 
   useEffect(() => {
@@ -111,7 +111,7 @@ const Home = () => {
             <div className="relative flex flex-col items-center gap-1">
               <div className="relative">
                 {Notification.length > 0 && (
-                  <span className="absolute -top-3 -right-2 md:-top-3 md:-right-2 bg-[#58B960] z-12 font-bold text-black text-[11px] px-1.5 py-0.5 rounded-full">
+                  <span className="absolute -top-3 -right-2 md:-top-3 md:-right-2 bg-[#58B960] border-2 border-[#1D1F1F] z-12 font-bold text-black text-[11px] px-1  rounded-full">
                     {Notification.length}
                   </span>
                 )}
@@ -189,7 +189,7 @@ const Home = () => {
             <div className="relative flex flex-col items-center ">
               <div className="relative">
                 {callNotification?.length > 0 && (
-                  <span className="absolute -top-3 -right-2 md:-top-3 md:-right-2 bg-[#58B960] font-bold text-black text-[11px] px-1.5 py-0.5 z-12 rounded-full">
+                  <span className="absolute -top-3 -right-2 md:-top-3 md:-right-2 bg-[#58B960] border-2  border-[#1D1F1F] font-bold text-black text-[11px] px-1 z-12 rounded-full">
                     {callNotification?.length}
                   </span>
                 )}
@@ -234,41 +234,62 @@ const Home = () => {
                     className={`md:w-[410px] flex-shrink-0 w-full bg-[#161717] text-white border-r border-black flex flex-col ${selectedChat ? "hidden md:flex " : "flex"}`}
                   >
                     <div className="flex justify-between items-center py-4 px-4 relative">
-                      <h1 className="text-3xl font-medium">Chats</h1>
-                      <span className="flex items-center gap-3 text-xl">
-                        <RiChatNewFill
-                          onClick={() => searchRef.current.focus()}
-                          className="hover:cursor-pointer"
-                        />
-                        <BsThreeDotsVertical
-                          onClick={() => setisPopupOpen((prev) => !prev)}
-                          className="hover:cursor-pointer relative"
-                        />
-                        {isPopupOpen && (
-                          <div className="absolute right-[9%] top-4 mt-4 z-50">
-                            <div className="backdrop-blur-xl bg-black/90 text-white rounded-xl shadow-2xl py-2 w-52 border border-white/10 ring-1 ring-white/5">
-                              <Link
-                                to=""
-                                className="block px-4 py-2 text-base hover:bg-white/10 transition"
-                              >
-                                Read Messages
-                              </Link>
-                              <Link
-                                to=""
-                                className="block px-4 py-2 text-base hover:bg-white/10 transition"
-                              >
-                                Unread Messages
-                              </Link>
-                              <Link
-                                to=""
-                                className="block px-4 py-2 text-base hover:bg-white/10 transition"
-                              >
-                                Star Messages
-                              </Link>
-                            </div>
-                          </div>
+                      <h1 className="relative flex items-center text-3xl font-medium h-10">
+                        {isOpenSearchUserModal && (
+                          <button
+                            className=" text-white h-10 w-10  flex items-center justify-center 
+                              shadow-md active:scale-95 transition cursor-pointer"
+                            onClick={handleInput}
+                          >
+                            <FaArrowLeft />
+                          </button>
                         )}
-                      </span>
+
+                        <span
+                          className={`transition-transform
+                           duration-500 ease-out
+                           ${isOpenSearchUserModal ? "translate-x-2" : "translate-x-0"}`}
+                          style={{ willChange: "transform" }}
+                        >
+                          {isOpenSearchUserModal ? "All Users" : "Chats"}
+                        </span>
+                      </h1>
+                      {!isOpenSearchUserModal && (
+                        <span className="flex items-center gap-3 text-xl">
+                          <RiChatNewFill
+                            onClick={() => searchRef.current.focus()}
+                            className="hover:cursor-pointer"
+                          />
+                          <BsThreeDotsVertical
+                            onClick={() => setisPopupOpen((prev) => !prev)}
+                            className="hover:cursor-pointer relative"
+                          />
+                          {isPopupOpen && (
+                            <div className="absolute right-[9%] top-4 mt-4 z-50">
+                              <div className="backdrop-blur-xl bg-black/90 text-white rounded-xl shadow-2xl py-2 w-52 border border-white/10 ring-1 ring-white/5">
+                                <Link
+                                  to=""
+                                  className="block px-4 py-2 text-base hover:bg-white/10 transition"
+                                >
+                                  Read Messages
+                                </Link>
+                                <Link
+                                  to=""
+                                  className="block px-4 py-2 text-base hover:bg-white/10 transition"
+                                >
+                                  Unread Messages
+                                </Link>
+                                <Link
+                                  to=""
+                                  className="block px-4 py-2 text-base hover:bg-white/10 transition"
+                                >
+                                  Star Messages
+                                </Link>
+                              </div>
+                            </div>
+                          )}
+                        </span>
+                      )}
                     </div>
                     <div className="mb-4 relative px-4 relative ">
                       <input
@@ -278,24 +299,26 @@ const Home = () => {
                         placeholder="Search or start a new chat"
                         ref={searchRef}
                         onChange={handleSearch}
+                        onFocus={() => setisOpenSearchUserModal(true)}
                         value={searchInputValue}
                       />
                       <FaSearch className="absolute left-8 top-1/2 -translate-y-1/2 text-gray-500 " />
-                      {isOpenSearchUserModal && (
-                        <SearchUserModal
-                          SearchValue={searchInputValue}
-                          handleInput={handleInput}
-                        />
-                      )}
                     </div>
-                    <UserList isGroupsOpen={isGroupsOpen} />
+                    {isOpenSearchUserModal ? (
+                      <SearchUserModal
+                        SearchValue={searchInputValue}
+                        handleInput={handleInput}
+                      />
+                    ) : (
+                      <UserList isGroupsOpen={isGroupsOpen} />
+                    )}
                   </div>
                 )}
 
                 {selectedChat ? (
                   <MessageContainer />
                 ) : (
-                  <div className="hidden md:flex flex-1 bg-gray-100 items-center justify-center">
+                  <div className="hidden md:flex flex-1 bg-[#1D1F1F] text-white  items-center justify-center">
                     <motion.h1
                       className="text-3xl lg:text-5xl font-medium text-center px-4"
                       initial={{ opacity: 0, y: 60 }}

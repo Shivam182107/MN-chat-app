@@ -48,7 +48,7 @@ const AddUserInGroup = ({ handleAddMemberInGroup }) => {
                         <h1 className="text-lg font-semibold">Add group members</h1>
                     </div>
 
-                    {/* Search (optional like WhatsApp) */}
+                    
                     <input
                         type="text"
                         placeholder="Search name or email"

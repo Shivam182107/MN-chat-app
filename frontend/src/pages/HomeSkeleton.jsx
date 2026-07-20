@@ -45,10 +45,10 @@ const HomeSkeleton = () => {
         </div>
 
         {/* Mobile Bottom Nav */}
-       <div className="md:w-16 md:h-full md:flex-col md:relative md:justify-evenly
+       <div className="md:hidden
                         bg-[#1D1F1F] flex items-center py-4
                         absolute bottom-0 w-full h-24 justify-evenly z-10
-                        md:static md:h-auto">
+                        ">
           {[...Array(4)].map((_, i) => (
             <div key={i} className="size-7 rounded-full skeleton shrink-0" />
           ))}
