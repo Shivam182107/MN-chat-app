@@ -103,7 +103,7 @@ const Home = () => {
       <div className="h-[100dvh] flex flex-col bg-[#F7F5F3]">
         <Navabar profileActivate={profileActivate} />
 
-        <div className="flex flex-1 overflow-hidden relative">
+        <div className="flex flex-1 overflow-hidden relative bg-[#1D1F1F]">
           {/* Sidebar */}
           <div
             className={`md:w-16 md:h-full bg-[#1D1F1F] text-white flex md:flex-col items-center md:relative py-4 absolute bottom-0 w-full h-24 justify-evenly ${selectedChat ? "hidden md:flex " : "flex"}`}
