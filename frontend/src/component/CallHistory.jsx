@@ -84,7 +84,7 @@ const CallHistory = () => {
               return (
                 <div
                   key={item._id}
-                  className="p-3 bg-[#161717] flex rounded items-center hover:bg-[#2E2F2F] cursor-pointer transition"
+                  className="p-3 bg-[#161717] flex rounded items-center hover:bg-[#2E2F2F] cursor-pointer transition animate-fade-in-up"
                 >
                   {/* Avatar */}
                   <div

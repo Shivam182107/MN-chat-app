@@ -55,7 +55,7 @@ const ChatContext = ({ children }) => {
   }
 
   useEffect(() => {
-    if (!groupMemberList?.length || !chatDetails?.length || !User) return;
+    if (!groupMemberList?.length || !User || chatDetails === null) return;
     const users = chatDetails
       .map((val) => !val.isGroupChat && val.users)
       .filter(Boolean)
